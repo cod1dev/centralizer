@@ -1,0 +1,2 @@
+# gfc
+gametype function centralizer
