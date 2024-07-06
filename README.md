@@ -1,4 +1,4 @@
-# Gametype function centralizer for CoD1
+# Gametype function centralizer for [CoD1](https://en.wikipedia.org/wiki/Call_of_Duty_(video_game))
 ### Centralizing and merging the common source code parts of the stock gametypes
 
 Supported version: **1.1**
