@@ -1,273 +1,122 @@
 Callback_StartGameType(gametype)
 {
-    switch(gametype)
+    // if this is a fresh map start, set nationalities based on cvars, otherwise leave game variable nationalities as set in the level script
+    if((gametype == "dm" || gametype == "tdm" || gametype == "bel") || ((gametype == "sd" || gametype == "re") && !isdefined(game["gamestarted"])))
     {
-        case "sd":
+        // defaults if not defined in level script
+        if(!isdefined(game["allies"]))
+            game["allies"] = "american";
+        if(!isdefined(game["axis"]))
+            game["axis"] = "german";
+
+        if(!isdefined(game["layoutimage"]))
+            game["layoutimage"] = "default";
+        layoutname = "levelshots/layouts/hud@layout_" + game["layoutimage"];
+        precacheShader(layoutname);
+        setcvar("scr_layoutimage", layoutname);
+        makeCvarServerInfo("scr_layoutimage", "");
+
+        // server cvar overrides
+        if(getcvar("scr_allies") != "")
+            game["allies"] = getcvar("scr_allies");	
+        if(getcvar("scr_axis") != "")
+            game["axis"] = getcvar("scr_axis");
+        
+        if(gametype == "bel")
         {
-            // if this is a fresh map start, set nationalities based on cvars, otherwise leave game variable nationalities as set in the level script
-            if(!isdefined(game["gamestarted"]))
-            {
-                // defaults if not defined in level script
-                if(!isdefined(game["allies"]))
-                    game["allies"] = "american";
-                if(!isdefined(game["axis"]))
-                    game["axis"] = "german";
-
-                if(!isdefined(game["layoutimage"]))
-                    game["layoutimage"] = "default";
-                layoutname = "levelshots/layouts/hud@layout_" + game["layoutimage"];
-                precacheShader(layoutname);
-                setcvar("scr_layoutimage", layoutname);
-                makeCvarServerInfo("scr_layoutimage", "");
-
-                // server cvar overrides
-                if(getcvar("scr_allies") != "")
-                    game["allies"] = getcvar("scr_allies");	
-                if(getcvar("scr_axis") != "")
-                    game["axis"] = getcvar("scr_axis");
-
-                game["menu_team"] = "team_" + game["allies"] + game["axis"];
-                game["menu_weapon_allies"] = "weapon_" + game["allies"];
-                game["menu_weapon_axis"] = "weapon_" + game["axis"];
-                game["menu_viewmap"] = "viewmap";
-                game["menu_callvote"] = "callvote";
-                game["menu_quickcommands"] = "quickcommands";
-                game["menu_quickstatements"] = "quickstatements";
-                game["menu_quickresponses"] = "quickresponses";
-                game["headicon_allies"] = "gfx/hud/headicon@allies.tga";
-                game["headicon_axis"] = "gfx/hud/headicon@axis.tga";
-
-                precacheString(&"MPSCRIPT_PRESS_ACTIVATE_TO_SKIP");
-                precacheString(&"MPSCRIPT_KILLCAM");
-                precacheString(&"SD_MATCHSTARTING");
-                precacheString(&"SD_MATCHRESUMING");
-                precacheString(&"SD_EXPLOSIVESPLANTED");
-                precacheString(&"SD_EXPLOSIVESDEFUSED");
-                precacheString(&"SD_ROUNDDRAW");
-                precacheString(&"SD_TIMEHASEXPIRED");
-                precacheString(&"SD_ALLIEDMISSIONACCOMPLISHED");
-                precacheString(&"SD_AXISMISSIONACCOMPLISHED");
-                precacheString(&"SD_ALLIESHAVEBEENELIMINATED");
-                precacheString(&"SD_AXISHAVEBEENELIMINATED");
-
-                precacheMenu(game["menu_team"]);
-                precacheMenu(game["menu_weapon_allies"]);
-                precacheMenu(game["menu_weapon_axis"]);
-                precacheMenu(game["menu_viewmap"]);
-                precacheMenu(game["menu_callvote"]);
-                precacheMenu(game["menu_quickcommands"]);
-                precacheMenu(game["menu_quickstatements"]);
-                precacheMenu(game["menu_quickresponses"]);
-
-                precacheShader("black");
-                precacheShader("white");
-                precacheShader("hudScoreboard_mp");
-                precacheShader("gfx/hud/hud@mpflag_spectator.tga");
-                precacheStatusIcon("gfx/hud/hud@status_dead.tga");
-                precacheStatusIcon("gfx/hud/hud@status_connecting.tga");
-                precacheHeadIcon(game["headicon_allies"]);
-                precacheHeadIcon(game["headicon_axis"]);
-
-                precacheShader("ui_mp/assets/hud@plantbomb.tga");
-                precacheShader("ui_mp/assets/hud@defusebomb.tga");
-                precacheShader("gfx/hud/hud@objectiveA.tga");
-                precacheShader("gfx/hud/hud@objectiveA_up.tga");
-                precacheShader("gfx/hud/hud@objectiveA_down.tga");
-                precacheShader("gfx/hud/hud@objectiveB.tga");
-                precacheShader("gfx/hud/hud@objectiveB_up.tga");
-                precacheShader("gfx/hud/hud@objectiveB_down.tga");
-                precacheShader("gfx/hud/hud@bombplanted.tga");
-                precacheShader("gfx/hud/hud@bombplanted_up.tga");
-                precacheShader("gfx/hud/hud@bombplanted_down.tga");
-                precacheShader("gfx/hud/hud@bombplanted_down.tga");
-                precacheModel("xmodel/mp_bomb1_defuse");
-                precacheModel("xmodel/mp_bomb1");
-                
-                maps\mp\gametypes\_teams::precache();
-                maps\mp\gametypes\_teams::scoreboard();
-                maps\mp\gametypes\_teams::initGlobalCvars();
-
-                //thread addBotClients();
-            }
-            
-            maps\mp\gametypes\_teams::modeltype();
-            maps\mp\gametypes\_teams::restrictPlacedWeapons();
-
-            game["gamestarted"] = true;
-            
-            setClientNameMode("manual_change");
-
-            thread maps\mp\gametypes\sd::bombzones();
-            thread maps\mp\gametypes\sd::startGame();
-            thread maps\mp\gametypes\sd::updateScriptCvars();
-            //thread maps\mp\gametypes\sd::addBotClients();
-        }
-        break;
-
-        case "dm":
-        {
-            // defaults if not defined in level script
-            if(!isdefined(game["allies"]))
-                game["allies"] = "american";
-            if(!isdefined(game["axis"]))
-                game["axis"] = "german";
-
-            if(!isdefined(game["layoutimage"]))
-                game["layoutimage"] = "default";
-            layoutname = "levelshots/layouts/hud@layout_" + game["layoutimage"];
-            precacheShader(layoutname);
-            setcvar("scr_layoutimage", layoutname);
-            makeCvarServerInfo("scr_layoutimage", "");
-
-            // server cvar overrides
-            if(getcvar("scr_allies") != "")
-                game["allies"] = getcvar("scr_allies");
-            if(getcvar("scr_axis") != "")
-                game["axis"] = getcvar("scr_axis");
-
-            game["menu_team"] = "team_" + game["allies"] + game["axis"];
-            game["menu_weapon_allies"] = "weapon_" + game["allies"];
-            game["menu_weapon_axis"] = "weapon_" + game["axis"];
-            game["menu_viewmap"] = "viewmap";
-            game["menu_callvote"] = "callvote";
-            game["menu_quickcommands"] = "quickcommands";
-            game["menu_quickstatements"] = "quickstatements";
-            game["menu_quickresponses"] = "quickresponses";
-
-            precacheString(&"MPSCRIPT_PRESS_ACTIVATE_TO_RESPAWN");
-            precacheString(&"MPSCRIPT_KILLCAM");
-
-            precacheMenu(game["menu_team"]);
-            precacheMenu(game["menu_weapon_allies"]);
-            precacheMenu(game["menu_weapon_axis"]);
-            precacheMenu(game["menu_viewmap"]);
-            precacheMenu(game["menu_callvote"]);
-            precacheMenu(game["menu_quickcommands"]);
-            precacheMenu(game["menu_quickstatements"]);
-            precacheMenu(game["menu_quickresponses"]);
-
-            precacheShader("black");
-            precacheShader("hudScoreboard_mp");
-            precacheShader("gfx/hud/hud@mpflag_none.tga");
-            precacheShader("gfx/hud/hud@mpflag_spectator.tga");
-            precacheStatusIcon("gfx/hud/hud@status_dead.tga");
-            precacheStatusIcon("gfx/hud/hud@status_connecting.tga");
-            precacheItem("item_health");
-
-            maps\mp\gametypes\_teams::modeltype();
-            maps\mp\gametypes\_teams::precache();
-            maps\mp\gametypes\_teams::initGlobalCvars();
-            maps\mp\gametypes\_teams::restrictPlacedWeapons();
-
-            setClientNameMode("auto_change");
-
-            thread maps\mp\gametypes\dm::startGame();
-        //	thread maps\mp\gametypes\dm::addBotClients(); // For development testing
-            thread maps\mp\gametypes\dm::updateScriptCvars();
-        }
-        break;
-
-        case "tdm":
-        {
-            // defaults if not defined in level script
-            if(!isdefined(game["allies"]))
-                game["allies"] = "american";
-            if(!isdefined(game["axis"]))
-                game["axis"] = "german";
-
-            if(!isdefined(game["layoutimage"]))
-                game["layoutimage"] = "default";
-            layoutname = "levelshots/layouts/hud@layout_" + game["layoutimage"];
-            precacheShader(layoutname);
-            setcvar("scr_layoutimage", layoutname);
-            makeCvarServerInfo("scr_layoutimage", "");
-
-            // server cvar overrides
-            if(getcvar("scr_allies") != "")
-                game["allies"] = getcvar("scr_allies");	
-            if(getcvar("scr_axis") != "")
-                game["axis"] = getcvar("scr_axis");
-            
-            game["menu_team"] = "team_" + game["allies"] + game["axis"];
-            game["menu_weapon_allies"] = "weapon_" + game["allies"];
-            game["menu_weapon_axis"] = "weapon_" + game["axis"];
-            game["menu_viewmap"] = "viewmap";
-            game["menu_callvote"] = "callvote";
-            game["menu_quickcommands"] = "quickcommands";
-            game["menu_quickstatements"] = "quickstatements";
-            game["menu_quickresponses"] = "quickresponses";
-            game["headicon_allies"] = "gfx/hud/headicon@allies.tga";
-            game["headicon_axis"] = "gfx/hud/headicon@axis.tga";
-
-            precacheString(&"MPSCRIPT_PRESS_ACTIVATE_TO_RESPAWN");
-            precacheString(&"MPSCRIPT_KILLCAM");
-
-            precacheMenu(game["menu_team"]);
-            precacheMenu(game["menu_weapon_allies"]);
-            precacheMenu(game["menu_weapon_axis"]);
-            precacheMenu(game["menu_viewmap"]);
-            precacheMenu(game["menu_callvote"]);
-            precacheMenu(game["menu_quickcommands"]);
-            precacheMenu(game["menu_quickstatements"]);
-            precacheMenu(game["menu_quickresponses"]);
-
-            precacheShader("black");
-            precacheShader("hudScoreboard_mp");
-            precacheShader("gfx/hud/hud@mpflag_spectator.tga");
-            precacheStatusIcon("gfx/hud/hud@status_dead.tga");
-            precacheStatusIcon("gfx/hud/hud@status_connecting.tga");
-            precacheHeadIcon(game["headicon_allies"]);
-            precacheHeadIcon(game["headicon_axis"]);
-            precacheItem("item_health");
-
-            maps\mp\gametypes\_teams::modeltype();
-            maps\mp\gametypes\_teams::precache();
-            maps\mp\gametypes\_teams::scoreboard();
-            maps\mp\gametypes\_teams::initGlobalCvars();
-            maps\mp\gametypes\_teams::restrictPlacedWeapons();
-
-            setClientNameMode("auto_change");
-            
-            thread maps\mp\gametypes\tdm::startGame();
-            //thread maps\mp\gametypes\tdm::addBotClients(); // For development testing
-            thread maps\mp\gametypes\tdm::updateScriptCvars();
-        }
-        break;
-
-        case "bel":
-        {
-            if(!isdefined(game["allies"]))
-                game["allies"] = "american";
-            if(!isdefined(game["axis"]))
-                game["axis"] = "german";
-
-            if(!isdefined(game["layoutimage"]))
-                game["layoutimage"] = "default";
-            layoutname = "levelshots/layouts/hud@layout_" + game["layoutimage"];
-            precacheShader(layoutname);
-            setcvar("scr_layoutimage", layoutname);
-            makeCvarServerInfo("scr_layoutimage", "");
-
-            if(getcvar("scr_allies") != "")
-                game["allies"] = getcvar("scr_allies");
-            if(getcvar("scr_axis") != "")
-                game["axis"] = getcvar("scr_axis");
-
             game["menu_team"] = "team_germanonly";
-            
+        
             game["menu_weapon_all"] = "weapon_" + game["allies"] + game["axis"];
             game["menu_weapon_allies_only"] = "weapon_" + game["allies"];
             game["menu_weapon_axis_only"] = "weapon_" + game["axis"];
-            game["menu_viewmap"] = "viewmap";
-            game["menu_callvote"] = "callvote";
-            game["menu_quickcommands"] = "quickcommands";
-            game["menu_quickstatements"] = "quickstatements";
-            game["menu_quickresponses"] = "quickresponses";
+        }
+        else
+        {
+            game["menu_team"] = "team_" + game["allies"] + game["axis"];
+            game["menu_weapon_allies"] = "weapon_" + game["allies"];
+            game["menu_weapon_axis"] = "weapon_" + game["axis"];
+        }
+        game["menu_viewmap"] = "viewmap";
+        game["menu_callvote"] = "callvote";
+        game["menu_quickcommands"] = "quickcommands";
+        game["menu_quickstatements"] = "quickstatements";
+        game["menu_quickresponses"] = "quickresponses";
+        if(gametype == "sd" || gametype == "tdm" || gametype == "bel")
+        {
             game["headicon_allies"] = "gfx/hud/headicon@allies.tga";
             game["headicon_axis"] = "gfx/hud/headicon@axis.tga";
-
+        }
+        
+        if(gametype == "sd" || gametype == "re")
+        {
+            precacheString(&"MPSCRIPT_PRESS_ACTIVATE_TO_SKIP");
+        }
+        else if(gametype == "dm" || gametype == "tdm" || gametype == "bel")
+        {
             precacheString(&"MPSCRIPT_PRESS_ACTIVATE_TO_RESPAWN");
-            precacheString(&"MPSCRIPT_KILLCAM");
+        }
+        precacheString(&"MPSCRIPT_KILLCAM");
+        if(gametype == "sd")
+        {
+            precacheString(&"SD_MATCHSTARTING");
+            precacheString(&"SD_MATCHRESUMING");
+            precacheString(&"SD_EXPLOSIVESPLANTED");
+            precacheString(&"SD_EXPLOSIVESDEFUSED");
+            precacheString(&"SD_ROUNDDRAW");
+            precacheString(&"SD_TIMEHASEXPIRED");
+            precacheString(&"SD_ALLIEDMISSIONACCOMPLISHED");
+            precacheString(&"SD_AXISMISSIONACCOMPLISHED");
+            precacheString(&"SD_ALLIESHAVEBEENELIMINATED");
+            precacheString(&"SD_AXISHAVEBEENELIMINATED");
+        }
+        else if(gametype == "re")
+        {
+            precacheString(&"MPSCRIPT_ROUNDCAM");
+            precacheString(&"MPSCRIPT_ALLIES_WIN");
+            precacheString(&"MPSCRIPT_AXIS_WIN");
+            precacheString(&"MPSCRIPT_STARTING_NEW_ROUND");
+            precacheString(&"RE_U_R_CARRYING");
+            precacheString(&"RE_U_R_CARRYING_GENERIC");
+            precacheString(&"RE_PICKUP_AXIS_ONLY_GENERIC");
+            precacheString(&"RE_PICKUP_AXIS_ONLY");
+            precacheString(&"RE_PICKUP_ALLIES_ONLY_GENERIC");
+            precacheString(&"RE_PICKUP_ALLIES_ONLY");
+            precacheString(&"RE_OBJ_PICKED_UP_GENERIC");
+            precacheString(&"RE_OBJ_PICKED_UP_GENERIC_NOSTARS");
+            precacheString(&"RE_OBJ_PICKED_UP");
+            precacheString(&"RE_OBJ_PICKED_UP_NOSTARS");
+            precacheString(&"RE_PRESS_TO_PICKUP");
+            precacheString(&"RE_PRESS_TO_PICKUP_GENERIC");
+            precacheString(&"RE_OBJ_TIMEOUT_RETURNING");
+            precacheString(&"RE_OBJ_DROPPED");
+            precacheString(&"RE_OBJ_DROPPED_DEFAULT");
+            precacheString(&"RE_OBJ_INMINES_MULTIPLE");
+            precacheString(&"RE_OBJ_INMINES_GENERIC");
+            precacheString(&"RE_OBJ_INMINES");
+            precacheString(&"RE_ATTACKERS_OBJ_TEXT_GENERIC");
+            precacheString(&"RE_DEFENDERS_OBJ_TEXT_GENERIC");
+            precacheString(&"RE_ROUND_DRAW");
+            precacheString(&"RE_MATCHSTARTING");
+            precacheString(&"RE_MATCHRESUMING");
+            precacheString(&"RE_TIMEEXPIRED");
+            precacheString(&"RE_ELIMINATED_ALLIES");
+            precacheString(&"RE_ELIMINATED_AXIS");
+            precacheString(&"RE_OBJ_CAPTURED_GENERIC");
+            precacheString(&"RE_OBJ_CAPTURED_ALL");
+            precacheString(&"RE_OBJ_CAPTURED");
+            precacheString(&"RE_RETRIEVAL");
+            precacheString(&"RE_ALLIES");
+            precacheString(&"RE_AXIS");
+            precacheString(&"RE_OBJ_ARTILLERY_MAP");
+            precacheString(&"RE_OBJ_PATROL_LOGS");
+            precacheString(&"RE_OBJ_CODE_BOOK");
+            precacheString(&"RE_OBJ_FIELD_RADIO");
+            precacheString(&"RE_OBJ_SPY_RECORDS");
+            precacheString(&"RE_OBJ_ROCKET_SCHEDULE");
+            precacheString(&"RE_OBJ_CAMP_RECORDS");
+        }
+        else if(gametype == "bel")
+        {
             precacheString(&"BEL_TIME_ALIVE");
             precacheString(&"BEL_TIME_TILL_SPAWN");
             precacheString(&"BEL_PRESS_TO_RESPAWN");
@@ -275,174 +124,162 @@ Callback_StartGameType(gametype)
             precacheString(&"BEL_WONTBE_ALLIED");
             precacheString(&"BEL_BLACKSCREEN_KILLEDALLIED");
             precacheString(&"BEL_BLACKSCREEN_WILLSPAWN");
-            
-            precacheMenu(game["menu_team"]);
-            precacheMenu(game["menu_weapon_all"]);
+        }
+
+        precacheMenu(game["menu_team"]);
+        if(gametype == "bel")
+        {
             precacheMenu(game["menu_weapon_allies_only"]);
             precacheMenu(game["menu_weapon_axis_only"]);
-            precacheMenu(game["menu_viewmap"]);
-            precacheMenu(game["menu_callvote"]);
-            precacheMenu(game["menu_quickcommands"]);
-            precacheMenu(game["menu_quickstatements"]);
-            precacheMenu(game["menu_quickresponses"]);
+        }
+        else
+        {
+            precacheMenu(game["menu_weapon_allies"]);
+            precacheMenu(game["menu_weapon_axis"]);
+        }
+        precacheMenu(game["menu_viewmap"]);
+        precacheMenu(game["menu_callvote"]);
+        precacheMenu(game["menu_quickcommands"]);
+        precacheMenu(game["menu_quickstatements"]);
+        precacheMenu(game["menu_quickresponses"]);
 
-            precacheShader("black");
+        if(gametype == "sd" || gametype == "re" || gametype == "tdm" || gametype == "bel")
+        {
+            precacheHeadIcon(game["headicon_allies"]);
+            precacheHeadIcon(game["headicon_axis"]);
+        }
+        if(gametype == "re")
+        {
+            precacheHeadIcon(game["headicon_carrier"]);
+        }
+        if(gametype == "bel")
+        {
+            precacheHeadIcon("gfx/hud/headicon@killcam_arrow");
+        }
+
+        precacheStatusIcon("gfx/hud/hud@status_dead.tga");
+        precacheStatusIcon("gfx/hud/hud@status_connecting.tga");
+        if(gametype == "re")
+        {
+            precacheStatusIcon(game["headicon_carrier"]);
+        }
+
+        precacheShader("black");
+        if(gametype == "sd" || gametype == "re")
+        {
+            precacheShader("white");
+        }
+        precacheShader("hudScoreboard_mp");
+        if(gametype == "dm")
+        {
+            precacheShader("gfx/hud/hud@mpflag_none.tga");
+        }
+        precacheShader("gfx/hud/hud@mpflag_spectator.tga");
+        if(gametype == "sd")
+        {
+            precacheShader("ui_mp/assets/hud@plantbomb.tga");
+            precacheShader("ui_mp/assets/hud@defusebomb.tga");
+            precacheShader("gfx/hud/hud@objectiveA.tga");
+            precacheShader("gfx/hud/hud@objectiveA_up.tga");
+            precacheShader("gfx/hud/hud@objectiveA_down.tga");
+            precacheShader("gfx/hud/hud@objectiveB.tga");
+            precacheShader("gfx/hud/hud@objectiveB_up.tga");
+            precacheShader("gfx/hud/hud@objectiveB_down.tga");
+            precacheShader("gfx/hud/hud@bombplanted.tga");
+            precacheShader("gfx/hud/hud@bombplanted_up.tga");
+            precacheShader("gfx/hud/hud@bombplanted_down.tga");
+            precacheShader("gfx/hud/hud@bombplanted_down.tga");
+        }
+        else if(gametype == "re")
+        {
+            precacheShader("gfx/hud/hud@objectivegoal.tga");
+            precacheShader("gfx/hud/hud@objectivegoal_up.tga");
+            precacheShader("gfx/hud/hud@objectivegoal_down.tga");
+            precacheShader("gfx/hud/objective.tga");
+            precacheShader("gfx/hud/objective_up.tga");
+            precacheShader("gfx/hud/objective_down.tga");
+        }
+        else if(gametype == "bel")
+        {
             precacheShader("gfx/hud/hud@objective_bel.tga");
             precacheShader("gfx/hud/hud@objective_bel_up.tga");
             precacheShader("gfx/hud/hud@objective_bel_down.tga");
-            precacheShader("hudScoreboard_mp");
-            precacheShader("gfx/hud/hud@mpflag_spectator.tga");
-            precacheHeadIcon("gfx/hud/headicon@killcam_arrow");
-            precacheHeadIcon(game["headicon_allies"]);
-            precacheHeadIcon(game["headicon_axis"]);
-            precacheStatusIcon("gfx/hud/hud@status_dead.tga");
-            precacheStatusIcon("gfx/hud/hud@status_connecting.tga");
-
-            maps\mp\gametypes\_teams::modeltype();
-            maps\mp\gametypes\_teams::precache();
-            maps\mp\gametypes\_teams::scoreboard();
-            maps\mp\gametypes\_teams::initGlobalCvars();
-            maps\mp\gametypes\_teams::restrictPlacedWeapons();
-
-            setClientNameMode("auto_change");
-
-            thread maps\mp\gametypes\bel::startGame();
-            thread maps\mp\gametypes\bel::updateScriptCvars();
         }
-        break;
 
-        case "re":
+        if(gametype == "sd")
         {
-            // if this is a fresh map start, set nationalities based on cvars, otherwise leave game variable nationalities as set in the level script
-            if(!isdefined(game["gamestarted"]))
-            {
-                // defaults if not defined in level script
-                if(!isdefined(game["allies"]))
-                    game["allies"] = "american";
-                if(!isdefined(game["axis"]))
-                    game["axis"] = "german";
+            precacheModel("xmodel/mp_bomb1_defuse");
+            precacheModel("xmodel/mp_bomb1");
+        }
 
-                if(!isdefined(game["layoutimage"]))
-                    game["layoutimage"] = "default";
-                layoutname = "levelshots/layouts/hud@layout_" + game["layoutimage"];
-                precacheShader(layoutname);
-                setcvar("scr_layoutimage", layoutname);
-                makeCvarServerInfo("scr_layoutimage", "");
+        if(gametype == "dm" || gametype == "tdm")
+        {
+            precacheItem("item_health");
+        }
 
-                // server cvar overrides
-                if(getcvar("scr_allies") != "")
-                    game["allies"] = getcvar("scr_allies");
-                if(getcvar("scr_axis") != "")
-                    game["axis"] = getcvar("scr_axis");
-
-                game["menu_team"] = "team_" + game["allies"] + game["axis"];
-                game["menu_weapon_allies"] = "weapon_" + game["allies"];
-                game["menu_weapon_axis"] = "weapon_" + game["axis"];
-                game["menu_viewmap"] = "viewmap";
-                game["menu_callvote"] = "callvote";
-                game["menu_quickcommands"] = "quickcommands";
-                game["menu_quickstatements"] = "quickstatements";
-                game["menu_quickresponses"] = "quickresponses";
-                
-                precacheString(&"MPSCRIPT_PRESS_ACTIVATE_TO_SKIP");
-                precacheString(&"MPSCRIPT_KILLCAM");
-                precacheString(&"MPSCRIPT_ROUNDCAM");
-                precacheString(&"MPSCRIPT_ALLIES_WIN");
-                precacheString(&"MPSCRIPT_AXIS_WIN");
-                precacheString(&"MPSCRIPT_STARTING_NEW_ROUND");
-                precacheString(&"RE_U_R_CARRYING");
-                precacheString(&"RE_U_R_CARRYING_GENERIC");
-                precacheString(&"RE_PICKUP_AXIS_ONLY_GENERIC");
-                precacheString(&"RE_PICKUP_AXIS_ONLY");
-                precacheString(&"RE_PICKUP_ALLIES_ONLY_GENERIC");
-                precacheString(&"RE_PICKUP_ALLIES_ONLY");
-                precacheString(&"RE_OBJ_PICKED_UP_GENERIC");
-                precacheString(&"RE_OBJ_PICKED_UP_GENERIC_NOSTARS");
-                precacheString(&"RE_OBJ_PICKED_UP");
-                precacheString(&"RE_OBJ_PICKED_UP_NOSTARS");
-                precacheString(&"RE_PRESS_TO_PICKUP");
-                precacheString(&"RE_PRESS_TO_PICKUP_GENERIC");
-                precacheString(&"RE_OBJ_TIMEOUT_RETURNING");
-                precacheString(&"RE_OBJ_DROPPED");
-                precacheString(&"RE_OBJ_DROPPED_DEFAULT");
-                precacheString(&"RE_OBJ_INMINES_MULTIPLE");
-                precacheString(&"RE_OBJ_INMINES_GENERIC");
-                precacheString(&"RE_OBJ_INMINES");
-                precacheString(&"RE_ATTACKERS_OBJ_TEXT_GENERIC");
-                precacheString(&"RE_DEFENDERS_OBJ_TEXT_GENERIC");
-                precacheString(&"RE_ROUND_DRAW");
-                precacheString(&"RE_MATCHSTARTING");
-                precacheString(&"RE_MATCHRESUMING");
-                precacheString(&"RE_TIMEEXPIRED");
-                precacheString(&"RE_ELIMINATED_ALLIES");
-                precacheString(&"RE_ELIMINATED_AXIS");
-                precacheString(&"RE_OBJ_CAPTURED_GENERIC");
-                precacheString(&"RE_OBJ_CAPTURED_ALL");
-                precacheString(&"RE_OBJ_CAPTURED");
-                precacheString(&"RE_RETRIEVAL");
-                precacheString(&"RE_ALLIES");
-                precacheString(&"RE_AXIS");
-                precacheString(&"RE_OBJ_ARTILLERY_MAP");
-                precacheString(&"RE_OBJ_PATROL_LOGS");
-                precacheString(&"RE_OBJ_CODE_BOOK");
-                precacheString(&"RE_OBJ_FIELD_RADIO");
-                precacheString(&"RE_OBJ_SPY_RECORDS");
-                precacheString(&"RE_OBJ_ROCKET_SCHEDULE");
-                precacheString(&"RE_OBJ_CAMP_RECORDS");
-                
-                precacheHeadIcon(game["headicon_allies"]);
-                precacheHeadIcon(game["headicon_axis"]);
-                precacheHeadIcon(game["headicon_carrier"]);
-                
-                precacheShader("gfx/hud/hud@objectivegoal.tga");
-                precacheShader("gfx/hud/hud@objectivegoal_up.tga");
-                precacheShader("gfx/hud/hud@objectivegoal_down.tga");
-                precacheShader("gfx/hud/objective.tga");
-                precacheShader("gfx/hud/objective_up.tga");
-                precacheShader("gfx/hud/objective_down.tga");
-                precacheShader("black");
-                precacheShader("white");
-                precacheShader("hudScoreboard_mp");
-                precacheShader("gfx/hud/hud@mpflag_spectator.tga");
-                
-                precacheMenu(game["menu_team"]);
-                precacheMenu(game["menu_weapon_allies"]);
-                precacheMenu(game["menu_weapon_axis"]);
-                precacheMenu(game["menu_viewmap"]);
-                precacheMenu(game["menu_callvote"]);
-                precacheMenu(game["menu_quickcommands"]);
-                precacheMenu(game["menu_quickstatements"]);
-                precacheMenu(game["menu_quickresponses"]);
-                
-                precacheStatusIcon("gfx/hud/hud@status_dead.tga");
-                precacheStatusIcon("gfx/hud/hud@status_connecting.tga");
-                precacheStatusIcon(game["headicon_carrier"]);
-                
-                maps\mp\gametypes\_teams::precache();
-                maps\mp\gametypes\_teams::scoreboard();
-                maps\mp\gametypes\_teams::initGlobalCvars();
-
-                //thread maps\mp\gametypes\re::addBotClients();
-            }
-
-            maps\mp\gametypes\_teams::modeltype();
-            maps\mp\gametypes\_teams::restrictPlacedWeapons();
-
-            game["gamestarted"] = true;
-            
-            setClientNameMode("manual_change");
-
-            thread maps\mp\gametypes\re::startGame();
-            thread maps\mp\gametypes\re::updateScriptCvars();
+        maps\mp\gametypes\_teams::precache();
+        if(gametype == "sd" || gametype == "re" || gametype == "tdm" || gametype == "bel")
+        {
+            maps\mp\gametypes\_teams::scoreboard();
+        }
+        maps\mp\gametypes\_teams::initGlobalCvars();
+        
+        if(gametype == "sd")
+        {
+            //thread maps\mp\gametypes\sd::addBotClients();
+        }
+        else if(gametype == "re")
+        {
             //thread maps\mp\gametypes\re::addBotClients();
         }
-        break;
+    }
 
-        default:
-        {
-            printLn("##### centralizer: Callback_StartGameType: default");
-        }
-        break;
+    maps\mp\gametypes\_teams::modeltype();
+    maps\mp\gametypes\_teams::restrictPlacedWeapons();
+
+    if(gametype == "sd" || gametype == "re")
+    {
+        game["gamestarted"] = true;
+    }
+
+    if(gametype == "sd" || gametype == "re")
+    {
+        setClientNameMode("manual_change");
+    }
+    else if(gametype == "dm" || gametype == "tdm" || gametype == "bel")
+    {
+        setClientNameMode("auto_change");
+    }
+
+    if(gametype == "sd")
+    {
+        thread maps\mp\gametypes\sd::bombzones();
+        thread maps\mp\gametypes\sd::startGame();
+        thread maps\mp\gametypes\sd::updateScriptCvars();
+        //thread maps\mp\gametypes\sd::addBotClients();
+    }
+    else if(gametype == "re")
+    {
+        thread maps\mp\gametypes\re::startGame();
+        thread maps\mp\gametypes\re::updateScriptCvars();
+        //thread maps\mp\gametypes\re::addBotClients();
+    }
+    else if(gametype == "dm")
+    {
+        thread maps\mp\gametypes\dm::startGame();
+    //	thread maps\mp\gametypes\dm::addBotClients(); // For development testing
+        thread maps\mp\gametypes\dm::updateScriptCvars();
+    }
+    else if(gametype == "tdm")
+    {
+        thread maps\mp\gametypes\tdm::startGame();
+        //thread maps\mp\gametypes\tdm::addBotClients(); // For development testing
+        thread maps\mp\gametypes\tdm::updateScriptCvars();
+    }
+    else if(gametype == "bel")
+    {
+        thread maps\mp\gametypes\bel::startGame();
+        thread maps\mp\gametypes\bel::updateScriptCvars();            
     }
 }
 
