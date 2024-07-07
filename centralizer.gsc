@@ -25,7 +25,7 @@ Callback_StartGameType(gametype)
         if(gametype == "bel")
         {
             game["menu_team"] = "team_germanonly";
-        
+    
             game["menu_weapon_all"] = "weapon_" + game["allies"] + game["axis"];
             game["menu_weapon_allies_only"] = "weapon_" + game["allies"];
             game["menu_weapon_axis_only"] = "weapon_" + game["axis"];
@@ -129,6 +129,7 @@ Callback_StartGameType(gametype)
         precacheMenu(game["menu_team"]);
         if(gametype == "bel")
         {
+            precacheMenu(game["menu_weapon_all"]);
             precacheMenu(game["menu_weapon_allies_only"]);
             precacheMenu(game["menu_weapon_axis_only"]);
         }
@@ -285,80 +286,253 @@ Callback_StartGameType(gametype)
 
 Callback_PlayerConnect(gametype)
 {
-    switch(gametype)
+    self.statusicon = "gfx/hud/hud@status_connecting.tga";
+    self waittill("begin");
+    self.statusicon = "";
+    if(gametype == "re")
     {
-        case "sd":
+        self.hudelem = [];
+    }
+    else if(gametype == "bel")
+    {
+        self.god = false;
+        self.respawnwait = false;
+    }
+
+    if((gametype == "dm" || gametype == "tdm") || !isdefined(self.pers["team"]))
+        iprintln(&"MPSCRIPT_CONNECTED", self);
+
+    lpselfnum = self getEntityNumber();
+    logPrint("J;" + lpselfnum + ";" + self.name + "\n");
+
+    if(gametype == "re")
+    {
+        self.objs_held = 0;
+    }
+    if(game["state"] == "intermission")
+    {
+        if(gametype == "sd")
         {
-            self.statusicon = "gfx/hud/hud@status_connecting.tga";
-            self waittill("begin");
-            self.statusicon = "";
+            maps\mp\gametypes\sd::spawnIntermission();
+        }
+        else if(gametype == "re")
+        {
+            maps\mp\gametypes\re::spawnIntermission();
+        }
+        else if(gametype == "dm")
+        {
+            maps\mp\gametypes\dm::spawnIntermission();
+        }
+        else if(gametype == "tdm")
+        {
+            maps\mp\gametypes\tdm::spawnIntermission();
+        }
+        else if(gametype == "bel")
+        {
+            maps\mp\gametypes\bel::spawnIntermission();
+        }
+        return;
+    }
 
-            if(!isdefined(self.pers["team"]))
-                iprintln(&"MPSCRIPT_CONNECTED", self);
+    level endon("intermission");
 
-            lpselfnum = self getEntityNumber();
-            logPrint("J;" + lpselfnum + ";" + self.name + "\n");
+    if(gametype == "bel")
+    {
+        if (isdefined (self.blackscreen))
+            self.blackscreen destroy();
+        if (isdefined (self.blackscreentext))
+            self.blackscreentext destroy();
+        if (isdefined (self.blackscreentext2))
+            self.blackscreentext2 destroy();
+        if (isdefined (self.blackscreentimer))
+            self.blackscreentimer destroy();
+    }
 
-            if(game["state"] == "intermission")
+    if(isdefined(self.pers["team"]) && self.pers["team"] != "spectator")
+    {
+        self setClientCvar("scr_showweapontab", "1");
+        if(gametype == "dm")
+        {
+            self.sessionteam = "none";
+        }
+
+        if(self.pers["team"] == "allies")
+        {
+            if(gametype == "tdm" || gametype == "bel")
             {
-                maps\mp\gametypes\sd::spawnIntermission();
-                return;
+                self.sessionteam = "allies";
             }
-            
-            level endon("intermission");
-            
-            if(isdefined(self.pers["team"]) && self.pers["team"] != "spectator")
+            if(gametype != "bel")
             {
-                self setClientCvar("scr_showweapontab", "1");
+                self setClientCvar("g_scriptMainMenu", game["menu_weapon_allies"]);
+            }
+        }
+        else
+        {
+            if(gametype == "tdm" || gametype == "bel")
+            {
+                self.sessionteam = "axis";
+            }
+            if(gametype != "bel")
+            {
+                self setClientCvar("g_scriptMainMenu", game["menu_weapon_axis"]);
+            }
+        }
+        if(gametype == "bel")
+        {
+            self setClientCvar("g_scriptMainMenu", game["menu_weapon_all"]);
+        }
+        
+        if(isdefined(self.pers["weapon"]))
+        {
+            if(gametype == "sd")
+            {
+                maps\mp\gametypes\sd::spawnPlayer();
+            }
+            else if(gametype == "re")
+            {
+                maps\mp\gametypes\re::spawnPlayer();
+            }
+            else if(gametype == "dm")
+            {
+                maps\mp\gametypes\dm::spawnPlayer();
+            }
+            else if(gametype == "tdm")
+            {
+                maps\mp\gametypes\tdm::spawnPlayer();
+            }
+            else if(gametype == "bel")
+            {
+                maps\mp\gametypes\bel::spawnPlayer();
+            }
+        }
+        else
+        {
+            if(gametype == "sd" || gametype == "re")
+            {
+                self.sessionteam = "spectator";
+            }
 
-                if(self.pers["team"] == "allies")
-                    self setClientCvar("g_scriptMainMenu", game["menu_weapon_allies"]);
-                else
-                    self setClientCvar("g_scriptMainMenu", game["menu_weapon_axis"]);
+            if(gametype == "sd")
+            {
+                maps\mp\gametypes\sd::spawnSpectator();
+            }
+            else if(gametype == "re")
+            {
+                maps\mp\gametypes\re::spawnSpectator();
+            }
+            else if(gametype == "dm")
+            {
+                maps\mp\gametypes\dm::spawnSpectator();
+            }
+            else if(gametype == "tdm")
+            {
+                maps\mp\gametypes\tdm::spawnSpectator();
+            }
+            else if(gametype == "bel")
+            {
+                maps\mp\gametypes\bel::spawnSpectator();
+            }
 
-                if(isdefined(self.pers["weapon"]))
-                    maps\mp\gametypes\sd::spawnPlayer();
+            if(self.pers["team"] == "allies")
+            {
+                if(gametype == "bel")
+                {
+                    self openMenu(game["menu_weapon_allies_only"]);
+                }
                 else
                 {
-                    self.sessionteam = "spectator";
-
-                    maps\mp\gametypes\sd::spawnSpectator();
-
-                    if(self.pers["team"] == "allies")
-                        self openMenu(game["menu_weapon_allies"]);
-                    else
-                        self openMenu(game["menu_weapon_axis"]);
+                    self openMenu(game["menu_weapon_allies"]);
                 }
             }
             else
             {
-                self setClientCvar("g_scriptMainMenu", game["menu_team"]);
-                self setClientCvar("scr_showweapontab", "0");
-
-                if(!isdefined(self.pers["team"]))
-                    self openMenu(game["menu_team"]);
-
-                self.pers["team"] = "spectator";
-                self.sessionteam = "spectator";
-
-                maps\mp\gametypes\sd::spawnSpectator();
-            }
-
-            for(;;)
-            {
-                self waittill("menuresponse", menu, response);
-                
-                if(response == "open" || response == "close")
-                    continue;
-
-                if(menu == game["menu_team"])
+                if(gametype == "bel")
                 {
-                    switch(response)
+                    self openMenu(game["menu_weapon_axis_only"]);
+                }
+                else
+                {
+                    self openMenu(game["menu_weapon_axis"]);
+                }
+            }
+        }
+    }
+    else
+    {
+        self setClientCvar("g_scriptMainMenu", game["menu_team"]);
+        self setClientCvar("scr_showweapontab", "0");
+
+        if(!isdefined(self.pers["team"]))
+            self openMenu(game["menu_team"]);
+
+        self.pers["team"] = "spectator";
+        self.sessionteam = "spectator";
+
+        if(gametype == "sd")
+        {
+            maps\mp\gametypes\sd::spawnSpectator();
+        }
+        else if(gametype == "re")
+        {
+            maps\mp\gametypes\re::spawnSpectator();
+        }
+        else if(gametype == "dm")
+        {
+            maps\mp\gametypes\dm::spawnSpectator();
+        }
+        else if(gametype == "tdm")
+        {
+            maps\mp\gametypes\tdm::spawnSpectator();
+        }
+        else if(gametype == "bel")
+        {
+            maps\mp\gametypes\bel::spawnSpectator();
+        }
+    }
+
+    for(;;)
+    {
+        self waittill("menuresponse", menu, response);
+
+        if(response == "open" || response == "close")
+            continue;
+        
+        if(menu == game["menu_team"])
+        {
+            switch(response)
+            {
+                case "allies":
+                case "axis":
+                    if(gametype == "bel")
                     {
-                    case "allies":
-                    case "axis":
-                    case "autoassign":
-                        if(response == "autoassign")
+                        if ( (self.pers["team"] != "axis") && (self.pers["team"] != "allies") )
+                        {
+                            self setClientCvar("g_scriptMainMenu", game["menu_weapon_axis_only"]);
+                            self.pers["team"] = "axis";
+                            if (isdefined (self.blackscreen))
+                                self.blackscreen destroy();
+                            if (isdefined (self.blackscreentext))
+                                self.blackscreentext destroy();
+                            if (isdefined (self.blackscreentext2))
+                                self.blackscreentext2 destroy();
+                            if (isdefined (self.blackscreentimer))
+                                self.blackscreentimer destroy();
+                            maps\mp\gametypes\bel::CheckAllies_andMoveAxis_to_Allies(self);
+                            if (self.pers["team"] == "axis")
+                            {
+                                self thread printJoinedTeam("axis");
+                                self maps\mp\gametypes\bel::move_to_axis();
+                            }
+                            else if (self.pers["team"] == "allies")
+                                self thread printJoinedTeam("allies");
+                        }
+                        break;
+                    }
+                case "autoassign":
+                    if(response == "autoassign")
+                    {
+                        if(gametype == "sd" || gametype == "re" || gametype == "tdm")
                         {
                             numonteam["allies"] = 0;
                             numonteam["axis"] = 0;
@@ -367,13 +541,13 @@ Callback_PlayerConnect(gametype)
                             for(i = 0; i < players.size; i++)
                             {
                                 player = players[i];
-                            
+
                                 if(!isdefined(player.pers["team"]) || player.pers["team"] == "spectator" || player == self)
                                     continue;
                     
                                 numonteam[player.pers["team"]]++;
                             }
-                            
+
                             // if teams are equal return the team with the lowest score
                             if(numonteam["allies"] == numonteam["axis"])
                             {
@@ -383,1421 +557,557 @@ Callback_PlayerConnect(gametype)
                                     teams[1] = "axis";
                                     response = teams[randomInt(2)];
                                 }
-                                else if(getTeamScore("allies") < getTeamScore("axis"))
+                                else if(numonteam["allies"] < numonteam["axis"])
                                     response = "allies";
                                 else
                                     response = "axis";
                             }
-                            else if(numonteam["allies"] < numonteam["axis"])
-                                response = "allies";
-                            else
-                                response = "axis";
                         }
-                        
-                        if(response == self.pers["team"] && self.sessionstate == "playing")
-                            break;
-                        
-                        if(response != self.pers["team"] && self.sessionstate == "playing")
-                            self suicide();
-                                    
-                        self.pers["team"] = response;
-                        self.pers["weapon"] = undefined;
-                        self.pers["weapon1"] = undefined;
-                        self.pers["weapon2"] = undefined;
-                        self.pers["spawnweapon"] = undefined;
-                        self.pers["savedmodel"] = undefined;
-
-                        self setClientCvar("scr_showweapontab", "1");
-
-                        if(self.pers["team"] == "allies")
-                        {
-                            self setClientCvar("g_scriptMainMenu", game["menu_weapon_allies"]);
-                            self openMenu(game["menu_weapon_allies"]);
-                        }
-                        else
-                        {
-                            self setClientCvar("g_scriptMainMenu", game["menu_weapon_axis"]);
-                            self openMenu(game["menu_weapon_axis"]);
-                        }
-                        break;
-
-                    case "spectator":
-                        if(self.pers["team"] != "spectator")
-                        {
-                            if(isalive(self))
-                                self suicide();
-
-                            self.pers["team"] = "spectator";
-                            self.pers["weapon"] = undefined;
-                            self.pers["weapon1"] = undefined;
-                            self.pers["weapon2"] = undefined;
-                            self.pers["spawnweapon"] = undefined;
-                            self.pers["savedmodel"] = undefined;
-                            
-                            self.sessionteam = "spectator";
-                            self setClientCvar("g_scriptMainMenu", game["menu_team"]);
-                            self setClientCvar("scr_showweapontab", "0");
-                            maps\mp\gametypes\sd::spawnSpectator();
-                        }
-                        break;
-
-                    case "weapon":
-                        if(self.pers["team"] == "allies")
-                            self openMenu(game["menu_weapon_allies"]);
-                        else if(self.pers["team"] == "axis")
-                            self openMenu(game["menu_weapon_axis"]);
-                        break;
-
-                    case "viewmap":
-                        self openMenu(game["menu_viewmap"]);
-                        break;
-                    
-                    case "callvote":
-                        self openMenu(game["menu_callvote"]);
-                        break;
-                    }
-                }		
-                else if(menu == game["menu_weapon_allies"] || menu == game["menu_weapon_axis"])
-                {
-                    if(response == "team")
-                    {
-                        self openMenu(game["menu_team"]);
-                        continue;
-                    }
-                    else if(response == "viewmap")
-                    {
-                        self openMenu(game["menu_viewmap"]);
-                        continue;
-                    }
-                    else if(response == "callvote")
-                    {
-                        self openMenu(game["menu_callvote"]);
-                        continue;
-                    }
-                    
-                    if(!isdefined(self.pers["team"]) || (self.pers["team"] != "allies" && self.pers["team"] != "axis"))
-                        continue;
-
-                    weapon = self maps\mp\gametypes\_teams::restrict(response);
-
-                    if(weapon == "restricted")
-                    {
-                        self openMenu(menu);
-                        continue;
-                    }
-                    
-                    if(isdefined(self.pers["weapon"]) && self.pers["weapon"] == weapon && !isdefined(self.pers["weapon1"]))
-                        continue;
-                        
-                    if(!game["matchstarted"])
-                    {
-                        self.pers["weapon"] = weapon;
-                        self.spawned = undefined;
-                        maps\mp\gametypes\sd::spawnPlayer();
-                        self thread printJoinedTeam(self.pers["team"]);
-                        level maps\mp\gametypes\sd::checkMatchStart();
-                    }
-                    else if(!level.roundstarted)
-                    {
-                        if(isdefined(self.pers["weapon"]))
-                        {
-                            self.pers["weapon"] = weapon;
-                            self setWeaponSlotWeapon("primary", weapon);
-                            self setWeaponSlotAmmo("primary", 999);
-                            self setWeaponSlotClipAmmo("primary", 999);
-                            self switchToWeapon(weapon);
-                        }
-                        else
-                        {			 	
-                            self.pers["weapon"] = weapon;
-                            if(!level.exist[self.pers["team"]])
-                            {
-                                self.spawned = undefined;
-                                maps\mp\gametypes\sd::spawnPlayer();
-                                self thread printJoinedTeam(self.pers["team"]);
-                                level maps\mp\gametypes\sd::checkMatchStart();
-                            }
-                            else
-                            {
-                                maps\mp\gametypes\sd::spawnPlayer();
-                                self thread printJoinedTeam(self.pers["team"]);
-                            }
-                        }
-                    }
-                    else
-                    {
-                        if(isdefined(self.pers["weapon"]))
-                            self.oldweapon = self.pers["weapon"];
-
-                        self.pers["weapon"] = weapon;
-                        self.sessionteam = self.pers["team"];
-
-                        if(self.sessionstate != "playing")
-                            self.statusicon = "gfx/hud/hud@status_dead.tga";
-                    
-                        if(self.pers["team"] == "allies")
-                            otherteam = "axis";
-                        else if(self.pers["team"] == "axis")
-                            otherteam = "allies";
-                            
-                        // if joining a team that has no opponents, just spawn
-                        if(!level.didexist[otherteam] && !level.roundended)
-                        {
-                            self.spawned = undefined;
-                            maps\mp\gametypes\sd::spawnPlayer();
-                            self thread printJoinedTeam(self.pers["team"]);
-                        }				
-                        else if(!level.didexist[self.pers["team"]] && !level.roundended)
-                        {
-                            self.spawned = undefined;
-                            maps\mp\gametypes\sd::spawnPlayer();
-                            self thread printJoinedTeam(self.pers["team"]);
-                            level maps\mp\gametypes\sd::checkMatchStart();
-                        }
-                        else
-                        {
-                            weaponname = maps\mp\gametypes\_teams::getWeaponName(self.pers["weapon"]);
-
-                            if(self.pers["team"] == "allies")
-                            {
-                                if(maps\mp\gametypes\_teams::useAn(self.pers["weapon"]))
-                                    self iprintln(&"MPSCRIPT_YOU_WILL_SPAWN_ALLIED_WITH_AN_NEXT_ROUND", weaponname);
-                                else
-                                    self iprintln(&"MPSCRIPT_YOU_WILL_SPAWN_ALLIED_WITH_A_NEXT_ROUND", weaponname);
-                            }
-                            else if(self.pers["team"] == "axis")
-                            {
-                                if(maps\mp\gametypes\_teams::useAn(self.pers["weapon"]))
-                                    self iprintln(&"MPSCRIPT_YOU_WILL_SPAWN_AXIS_WITH_AN_NEXT_ROUND", weaponname);
-                                else
-                                    self iprintln(&"MPSCRIPT_YOU_WILL_SPAWN_AXIS_WITH_A_NEXT_ROUND", weaponname);
-                            }
-                        }
-                    }
-                }
-                else if(menu == game["menu_viewmap"])
-                {
-                    switch(response)
-                    {
-                    case "team":
-                        self openMenu(game["menu_team"]);
-                        break;
-                        
-                    case "weapon":
-                        if(self.pers["team"] == "allies")
-                            self openMenu(game["menu_weapon_allies"]);
-                        else if(self.pers["team"] == "axis")
-                            self openMenu(game["menu_weapon_axis"]);
-                        break;
-
-                    case "callvote":
-                        self openMenu(game["menu_callvote"]);
-                        break;
-                    }
-                }
-                else if(menu == game["menu_callvote"])
-                {
-                    switch(response)
-                    {
-                    case "team":
-                        self openMenu(game["menu_team"]);
-                        break;
-                        
-                    case "weapon":
-                        if(self.pers["team"] == "allies")
-                            self openMenu(game["menu_weapon_allies"]);
-                        else if(self.pers["team"] == "axis")
-                            self openMenu(game["menu_weapon_axis"]);
-                        break;
-
-                    case "viewmap":
-                        self openMenu(game["menu_viewmap"]);
-                        break;
-                    }
-                }
-                else if(menu == game["menu_quickcommands"])
-                    maps\mp\gametypes\_teams::quickcommands(response);
-                else if(menu == game["menu_quickstatements"])
-                    maps\mp\gametypes\_teams::quickstatements(response);
-                else if(menu == game["menu_quickresponses"])
-                    maps\mp\gametypes\_teams::quickresponses(response);
-            }
-        }
-        break;
-
-        case "dm":
-        {
-            self.statusicon = "gfx/hud/hud@status_connecting.tga";
-            self waittill("begin");
-            self.statusicon = "";
-
-            iprintln(&"MPSCRIPT_CONNECTED", self);
-
-            lpselfnum = self getEntityNumber();
-            logPrint("J;" + lpselfnum + ";" + self.name + "\n");
-            
-            if(game["state"] == "intermission")
-            {
-                maps\mp\gametypes\dm::spawnIntermission();
-                return;
-            }
-
-            level endon("intermission");
-
-            if(isdefined(self.pers["team"]) && self.pers["team"] != "spectator")
-            {
-                self setClientCvar("scr_showweapontab", "1");
-                self.sessionteam = "none";
-
-                if(self.pers["team"] == "allies")
-                    self setClientCvar("g_scriptMainMenu", game["menu_weapon_allies"]);
-                else
-                    self setClientCvar("g_scriptMainMenu", game["menu_weapon_axis"]);
-
-                if(isdefined(self.pers["weapon"]))
-                    maps\mp\gametypes\dm::spawnPlayer();
-                else
-                {
-                    maps\mp\gametypes\dm::spawnSpectator();
-
-                    if(self.pers["team"] == "allies")
-                        self openMenu(game["menu_weapon_allies"]);
-                    else
-                        self openMenu(game["menu_weapon_axis"]);
-                }
-            }
-            else
-            {
-                self setClientCvar("g_scriptMainMenu", game["menu_team"]);
-                self setClientCvar("scr_showweapontab", "0");
-
-                if(!isdefined(self.pers["team"]))
-                    self openMenu(game["menu_team"]);
-
-                self.pers["team"] = "spectator";
-                self.sessionteam = "spectator";
-
-                maps\mp\gametypes\dm::spawnSpectator();
-            }
-
-            for(;;)
-            {
-                self waittill("menuresponse", menu, response);
-
-                if(response == "open" || response == "close")
-                    continue;
-
-                if(menu == game["menu_team"])
-                {
-                    switch(response)
-                    {
-                    case "allies":
-                    case "axis":
-                    case "autoassign":
-                        if(response == "autoassign")
+                        else if(gametype == "dm")
                         {
                             teams[0] = "allies";
                             teams[1] = "axis";
                             response = teams[randomInt(2)];
                         }
+                    }
 
-                        if(response == self.pers["team"] && self.sessionstate == "playing")
-                            break;
-
-                        if(response != self.pers["team"] && self.sessionstate == "playing")
-                            self suicide();
-
+                    if(response == self.pers["team"] && self.sessionstate == "playing")
+                        break;
+                    
+                    if(response != self.pers["team"] && self.sessionstate == "playing")
+                        self suicide();
+                    
+                    if(gametype == "dm" || gametype == "tdm")
+                    {
                         self notify("end_respawn");
-
-                        self.pers["team"] = response;
-                        self.pers["weapon"] = undefined;
-                        self.pers["savedmodel"] = undefined;
-
-                        self setClientCvar("scr_showweapontab", "1");
-
-                        if(self.pers["team"] == "allies")
-                        {
-                            self setClientCvar("g_scriptMainMenu", game["menu_weapon_allies"]);
-                            self openMenu(game["menu_weapon_allies"]);
-                        }
-                        else
-                        {
-                            self setClientCvar("g_scriptMainMenu", game["menu_weapon_axis"]);
-                            self openMenu(game["menu_weapon_axis"]);
-                        }
-                        break;
-
-                    case "spectator":
-                        if(self.pers["team"] != "spectator")
-                        {
-                            self.pers["team"] = "spectator";
-                            self.pers["weapon"] = undefined;
-                            self.pers["savedmodel"] = undefined;
-
-                            self.sessionteam = "spectator";
-                            self setClientCvar("g_scriptMainMenu", game["menu_team"]);
-                            self setClientCvar("scr_showweapontab", "0");
-                            maps\mp\gametypes\dm::spawnSpectator();
-                        }
-                        break;
-
-                    case "weapon":
-                        if(self.pers["team"] == "allies")
-                            self openMenu(game["menu_weapon_allies"]);
-                        else if(self.pers["team"] == "axis")
-                            self openMenu(game["menu_weapon_axis"]);
-                        break;
-
-                    case "viewmap":
-                        self openMenu(game["menu_viewmap"]);
-                        break;
-
-                    case "callvote":
-                        self openMenu(game["menu_callvote"]);
-                        break;
                     }
-                }
-                else if(menu == game["menu_weapon_allies"] || menu == game["menu_weapon_axis"])
-                {
-                    if(response == "team")
+                                
+                    self.pers["team"] = response;
+                    self.pers["weapon"] = undefined;
+                    if(gametype == "sd" || gametype == "re")
                     {
-                        self openMenu(game["menu_team"]);
-                        continue;
-                    }
-                    else if(response == "viewmap")
-                    {
-                        self openMenu(game["menu_viewmap"]);
-                        continue;
-                    }
-                    else if(response == "callvote")
-                    {
-                        self openMenu(game["menu_callvote"]);
-                        continue;
-                    }
-
-                    if(!isdefined(self.pers["team"]) || (self.pers["team"] != "allies" && self.pers["team"] != "axis"))
-                        continue;
-                        
-                    weapon = self maps\mp\gametypes\_teams::restrict(response);
-
-                    if(weapon == "restricted")
-                    {
-                        self openMenu(menu);
-                        continue;
-                    }
-
-                    if(isdefined(self.pers["weapon"]) && self.pers["weapon"] == weapon)
-                        continue;
-
-                    if(!isdefined(self.pers["weapon"]))
-                    {
-                        self.pers["weapon"] = weapon;
-                        maps\mp\gametypes\dm::spawnPlayer();
-                    }
-                    else
-                    {
-                        self.pers["weapon"] = weapon;
-                        
-                        weaponname = maps\mp\gametypes\_teams::getWeaponName(self.pers["weapon"]);
-                        
-                        if(maps\mp\gametypes\_teams::useAn(self.pers["weapon"]))
-                            self iprintln(&"MPSCRIPT_YOU_WILL_RESPAWN_WITH_AN", weaponname);
-                        else
-                            self iprintln(&"MPSCRIPT_YOU_WILL_RESPAWN_WITH_A", weaponname);
-                    }
-                }
-                else if(menu == game["menu_viewmap"])
-                {
-                    switch(response)
-                    {
-                    case "team":
-                        self openMenu(game["menu_team"]);
-                        break;
-
-                    case "weapon":
-                        if(self.pers["team"] == "allies")
-                            self openMenu(game["menu_weapon_allies"]);
-                        else if(self.pers["team"] == "axis")
-                            self openMenu(game["menu_weapon_axis"]);
-                        break;
-
-                    case "callvote":
-                        self openMenu(game["menu_callvote"]);
-                        break;
-                    }
-                }
-                else if(menu == game["menu_callvote"])
-                {
-                    switch(response)
-                    {
-                    case "team":
-                        self openMenu(game["menu_team"]);
-                        break;
-
-                    case "weapon":
-                        if(self.pers["team"] == "allies")
-                            self openMenu(game["menu_weapon_allies"]);
-                        else if(self.pers["team"] == "axis")
-                            self openMenu(game["menu_weapon_axis"]);
-                        break;
-
-                    case "viewmap":
-                        self openMenu(game["menu_viewmap"]);
-                        break;
-                    }
-                }
-                else if(menu == game["menu_quickcommands"])
-                    maps\mp\gametypes\_teams::quickcommands(response);
-                else if(menu == game["menu_quickstatements"])
-                    maps\mp\gametypes\_teams::quickstatements(response);
-                else if(menu == game["menu_quickresponses"])
-                    maps\mp\gametypes\_teams::quickresponses(response);
-            }
-        }
-        break;
-
-        case "tdm":
-        {
-            self.statusicon = "gfx/hud/hud@status_connecting.tga";
-            self waittill("begin");
-            self.statusicon = "";
-
-            iprintln(&"MPSCRIPT_CONNECTED", self);
-
-            lpselfnum = self getEntityNumber();
-            logPrint("J;" + lpselfnum + ";" + self.name + "\n");
-
-            if(game["state"] == "intermission")
-            {
-                maps\mp\gametypes\tdm::spawnIntermission();
-                return;
-            }
-            
-            level endon("intermission");
-
-            if(isdefined(self.pers["team"]) && self.pers["team"] != "spectator")
-            {
-                self setClientCvar("scr_showweapontab", "1");
-
-                if(self.pers["team"] == "allies")
-                {
-                    self.sessionteam = "allies";
-                    self setClientCvar("g_scriptMainMenu", game["menu_weapon_allies"]);
-                }
-                else
-                {
-                    self.sessionteam = "axis";
-                    self setClientCvar("g_scriptMainMenu", game["menu_weapon_axis"]);
-                }
-                    
-                if(isdefined(self.pers["weapon"]))
-                    maps\mp\gametypes\tdm::spawnPlayer();
-                else
-                {
-                    maps\mp\gametypes\tdm::spawnSpectator();
-
-                    if(self.pers["team"] == "allies")
-                        self openMenu(game["menu_weapon_allies"]);
-                    else
-                        self openMenu(game["menu_weapon_axis"]);
-                }
-            }
-            else
-            {
-                self setClientCvar("g_scriptMainMenu", game["menu_team"]);
-                self setClientCvar("scr_showweapontab", "0");
-                
-                if(!isdefined(self.pers["team"]))
-                    self openMenu(game["menu_team"]);
-
-                self.pers["team"] = "spectator";
-                self.sessionteam = "spectator";
-
-                maps\mp\gametypes\tdm::spawnSpectator();
-            }
-
-            for(;;)
-            {
-                self waittill("menuresponse", menu, response);
-                
-                if(response == "open" || response == "close")
-                    continue;
-
-                if(menu == game["menu_team"])
-                {
-                    switch(response)
-                    {
-                    case "allies":
-                    case "axis":
-                    case "autoassign":
-                        if(response == "autoassign")
-                        {
-                            numonteam["allies"] = 0;
-                            numonteam["axis"] = 0;
-
-                            players = getentarray("player", "classname");
-                            for(i = 0; i < players.size; i++)
-                            {
-                                player = players[i];
-                            
-                                if(!isdefined(player.pers["team"]) || player.pers["team"] == "spectator" || player == self)
-                                    continue;
-                    
-                                numonteam[player.pers["team"]]++;
-                            }
-                            
-                            // if teams are equal return the team with the lowest score
-                            if(numonteam["allies"] == numonteam["axis"])
-                            {
-                                if(getTeamScore("allies") == getTeamScore("axis"))
-                                {
-                                    teams[0] = "allies";
-                                    teams[1] = "axis";
-                                    response = teams[randomInt(2)];
-                                }
-                                else if(getTeamScore("allies") < getTeamScore("axis"))
-                                    response = "allies";
-                                else
-                                    response = "axis";
-                            }
-                            else if(numonteam["allies"] < numonteam["axis"])
-                                response = "allies";
-                            else
-                                response = "axis";
-                        }
-                        
-                        if(response == self.pers["team"] && self.sessionstate == "playing")
-                            break;
-
-                        if(response != self.pers["team"] && self.sessionstate == "playing")
-                            self suicide();
-
-                        self notify("end_respawn");
-
-                        self.pers["team"] = response;
-                        self.pers["weapon"] = undefined;
-                        self.pers["savedmodel"] = undefined;
-
-                        self setClientCvar("scr_showweapontab", "1");
-
-                        if(self.pers["team"] == "allies")
-                        {
-                            self setClientCvar("g_scriptMainMenu", game["menu_weapon_allies"]);
-                            self openMenu(game["menu_weapon_allies"]);
-                        }
-                        else
-                        {
-                            self setClientCvar("g_scriptMainMenu", game["menu_weapon_axis"]);
-                            self openMenu(game["menu_weapon_axis"]);
-                        }
-                        break;
-
-                    case "spectator":
-                        if(self.pers["team"] != "spectator")
-                        {
-                            self.pers["team"] = "spectator";
-                            self.pers["weapon"] = undefined;
-                            self.pers["savedmodel"] = undefined;
-                            
-                            self.sessionteam = "spectator";
-                            self setClientCvar("g_scriptMainMenu", game["menu_team"]);
-                            self setClientCvar("scr_showweapontab", "0");
-                            maps\mp\gametypes\tdm::spawnSpectator();
-                        }
-                        break;
-
-                    case "weapon":
-                        if(self.pers["team"] == "allies")
-                            self openMenu(game["menu_weapon_allies"]);
-                        else if(self.pers["team"] == "axis")
-                            self openMenu(game["menu_weapon_axis"]);
-                        break;
-                        
-                    case "viewmap":
-                        self openMenu(game["menu_viewmap"]);
-                        break;
-
-                    case "callvote":
-                        self openMenu(game["menu_callvote"]);
-                        break;
-                    }
-                }		
-                else if(menu == game["menu_weapon_allies"] || menu == game["menu_weapon_axis"])
-                {
-                    if(response == "team")
-                    {
-                        self openMenu(game["menu_team"]);
-                        continue;
-                    }
-                    else if(response == "viewmap")
-                    {
-                        self openMenu(game["menu_viewmap"]);
-                        continue;
-                    }
-                    else if(response == "callvote")
-                    {
-                        self openMenu(game["menu_callvote"]);
-                        continue;
-                    }
-                    
-                    if(!isdefined(self.pers["team"]) || (self.pers["team"] != "allies" && self.pers["team"] != "axis"))
-                        continue;
-
-                    weapon = self maps\mp\gametypes\_teams::restrict(response);
-
-                    if(weapon == "restricted")
-                    {
-                        self openMenu(menu);
-                        continue;
-                    }
-                    
-                    if(isdefined(self.pers["weapon"]) && self.pers["weapon"] == weapon)
-                        continue;
-                    
-                    if(!isdefined(self.pers["weapon"]))
-                    {
-                        self.pers["weapon"] = weapon;
-                        maps\mp\gametypes\tdm::spawnPlayer();
-                        self thread printJoinedTeam(self.pers["team"]);
-                    }
-                    else
-                    {
-                        self.pers["weapon"] = weapon;
-
-                        weaponname = maps\mp\gametypes\_teams::getWeaponName(self.pers["weapon"]);
-                        
-                        if(maps\mp\gametypes\_teams::useAn(self.pers["weapon"]))
-                            self iprintln(&"MPSCRIPT_YOU_WILL_RESPAWN_WITH_AN", weaponname);
-                        else
-                            self iprintln(&"MPSCRIPT_YOU_WILL_RESPAWN_WITH_A", weaponname);
-                    }
-                }
-                else if(menu == game["menu_viewmap"])
-                {
-                    switch(response)
-                    {
-                    case "team":
-                        self openMenu(game["menu_team"]);
-                        break;
-                        
-                    case "weapon":
-                        if(self.pers["team"] == "allies")
-                            self openMenu(game["menu_weapon_allies"]);
-                        else if(self.pers["team"] == "axis")
-                            self openMenu(game["menu_weapon_axis"]);
-                        break;
-
-                    case "callvote":
-                        self openMenu(game["menu_callvote"]);
-                        break;
-                    }
-                }
-                else if(menu == game["menu_callvote"])
-                {
-                    switch(response)
-                    {
-                    case "team":
-                        self openMenu(game["menu_team"]);
-                        break;
-                        
-                    case "weapon":
-                        if(self.pers["team"] == "allies")
-                            self openMenu(game["menu_weapon_allies"]);
-                        else if(self.pers["team"] == "axis")
-                            self openMenu(game["menu_weapon_axis"]);
-                        break;
-
-                    case "viewmap":
-                        self openMenu(game["menu_viewmap"]);
-                        break;
-                    }
-                }
-                else if(menu == game["menu_quickcommands"])
-                    maps\mp\gametypes\_teams::quickcommands(response);
-                else if(menu == game["menu_quickstatements"])
-                    maps\mp\gametypes\_teams::quickstatements(response);
-                else if(menu == game["menu_quickresponses"])
-                    maps\mp\gametypes\_teams::quickresponses(response);
-            }
-        }
-        break;
-
-        case "bel":
-        {
-            self.statusicon = "gfx/hud/hud@status_connecting.tga";
-            self waittill("begin");
-            self.statusicon = "";
-            self.god = false;
-            self.respawnwait = false;
-            
-            if(!isdefined(self.pers["team"]))
-                iprintln(&"MPSCRIPT_CONNECTED", self);
-
-            lpselfnum = self getEntityNumber();
-            logPrint("J;" + lpselfnum + ";" + self.name + "\n");
-
-            if(game["state"] == "intermission")
-            {
-                maps\mp\gametypes\bel::spawnIntermission();
-                return;
-            }
-
-            level endon("intermission");
-            
-            if (isdefined (self.blackscreen))
-                self.blackscreen destroy();
-            if (isdefined (self.blackscreentext))
-                self.blackscreentext destroy();
-            if (isdefined (self.blackscreentext2))
-                self.blackscreentext2 destroy();
-            if (isdefined (self.blackscreentimer))
-                self.blackscreentimer destroy();
-
-            if(isdefined(self.pers["team"]) && self.pers["team"] != "spectator")
-            {
-                self setClientCvar("scr_showweapontab", "1");
-
-                if(self.pers["team"] == "allies")
-                    self.sessionteam = "allies";
-                else
-                    self.sessionteam = "axis";
-                
-                self setClientCvar("g_scriptMainMenu", game["menu_weapon_all"]);
-                
-                if(isdefined(self.pers["weapon"]))
-                {
-                    maps\mp\gametypes\bel::spawnPlayer();
-                }
-                else
-                {
-                    maps\mp\gametypes\bel::spawnSpectator();
-
-                    if(self.pers["team"] == "allies")
-                        self openMenu(game["menu_weapon_allies_only"]);
-                    else
-                        self openMenu(game["menu_weapon_axis_only"]);
-                }
-            }
-            else
-            {
-                self setClientCvar("g_scriptMainMenu", game["menu_team"]);
-                self setClientCvar("scr_showweapontab", "0");
-
-                if(!isdefined(self.pers["team"]))
-                    self openMenu(game["menu_team"]);
-
-                self.pers["team"] = "spectator";
-                self.sessionteam = "spectator";
-                
-                maps\mp\gametypes\bel::spawnSpectator();
-            }
-
-            for(;;)
-            {
-                self waittill("menuresponse", menu, response);
-                
-                if(response == "open" || response == "close")
-                    continue;
-
-                if(menu == game["menu_team"])
-                {
-                    switch(response)
-                    {
-                        case "axis":
-                            if ( (self.pers["team"] != "axis") && (self.pers["team"] != "allies") )
-                            {
-                                self setClientCvar("g_scriptMainMenu", game["menu_weapon_axis_only"]);
-                                self.pers["team"] = "axis";
-                                if (isdefined (self.blackscreen))
-                                    self.blackscreen destroy();
-                                if (isdefined (self.blackscreentext))
-                                    self.blackscreentext destroy();
-                                if (isdefined (self.blackscreentext2))
-                                    self.blackscreentext2 destroy();
-                                if (isdefined (self.blackscreentimer))
-                                    self.blackscreentimer destroy();
-                                maps\mp\gametypes\bel::CheckAllies_andMoveAxis_to_Allies(self);
-                                if (self.pers["team"] == "axis")
-                                {
-                                    self thread printJoinedTeam("axis");
-                                    self maps\mp\gametypes\bel::move_to_axis();
-                                }
-                                else if (self.pers["team"] == "allies")
-                                    self thread printJoinedTeam("allies");
-                            }
-                            break;
-
-                        case "spectator":
-                            if(self.pers["team"] != "spectator")
-                            {
-                                self.pers["team"] = "spectator";
-                                self.pers["weapon"] = undefined;
-                                self.pers["LastAxisWeapon"] = undefined;
-                                self.pers["LastAlliedWeapon"] = undefined;
-                                self.pers["savedmodel"] = undefined;
-                                self.sessionteam = "spectator";
-                                self setClientCvar("g_scriptMainMenu", game["menu_team"]);
-                                self setClientCvar("scr_showweapontab", "0");
-                                if (isdefined (self.blackscreen))
-                                    self.blackscreen destroy();
-                                if (isdefined (self.blackscreentext))
-                                    self.blackscreentext destroy();
-                                if (isdefined (self.blackscreentext2))
-                                    self.blackscreentext2 destroy();
-                                if (isdefined (self.blackscreentimer))
-                                    self.blackscreentimer destroy();
-                                self maps\mp\gametypes\bel::spawnSpectator();
-                                maps\mp\gametypes\bel::CheckAllies_andMoveAxis_to_Allies();
-                            }
-                            break;
-
-                        case "weapon":
-                            if ( (self.pers["team"] == "axis") || (self.pers["team"] == "allies") )
-                                self openMenu(game["menu_weapon_all"]);
-                            break;
-
-                        case "viewmap":
-                            self openMenu(game["menu_viewmap"]);
-                            break;
-
-                        case "callvote":
-                            self openMenu(game["menu_callvote"]);
-                            break;
-                    }
-                }		
-                else if(menu == game["menu_weapon_all"] || menu == game["menu_weapon_allies_only"] || menu == game["menu_weapon_axis_only"])
-                {
-                    if(response == "team")
-                    {
-                        self openMenu(game["menu_team"]);
-                        continue;
-                    }
-                    else if(response == "viewmap")
-                    {
-                        self openMenu(game["menu_viewmap"]);
-                        continue;
-                    }
-                    else if(response == "callvote")
-                    {
-                        self openMenu(game["menu_callvote"]);
-                        continue;
-                    }
-                    
-                    if(!isdefined(self.pers["team"]) || (self.pers["team"] != "allies" && self.pers["team"] != "axis"))
-                        continue;
-                    
-                    weapon = self maps\mp\gametypes\_teams::restrict_anyteam(response);
-
-                    if(weapon == "restricted")
-                    {
-                        self openMenu(menu);
-                        continue;
-                    }
-                    
-                    axisweapon = false;
-                    if (response == "kar98k_mp")
-                        axisweapon = true;
-                    else if (response == "mp40_mp")
-                        axisweapon = true;
-                    else if (response == "mp44_mp")
-                        axisweapon = true;
-                    else if (response == "kar98k_sniper_mp")
-                        axisweapon = true;
-
-                    if(isdefined(self.pers["weapon"]) && self.pers["weapon"] == weapon)
-                        continue;
-
-                    if(!isdefined(self.pers["weapon"]))
-                    {
-                        if (axisweapon == true)
-                            self.pers["LastAxisWeapon"] = weapon;
-                        else
-                            self.pers["LastAlliedWeapon"] = weapon;
-
-                        if (self.respawnwait != true)
-                        {
-                            if (self.pers["team"] == "allies")
-                            {
-                                if (axisweapon == true)
-                                {
-                                    self openMenu(menu);
-                                    continue;
-                                }
-                                else
-                                {
-                                    self.pers["weapon"] = weapon;
-                                    maps\mp\gametypes\bel::spawnPlayer();
-                                }
-
-                            }
-                            else if (self.pers["team"] == "axis")
-                            {
-                                if (axisweapon != true)
-                                {
-                                    self openMenu(menu);
-                                    continue;
-                                }
-                                else
-                                {
-                                    self.pers["weapon"] = weapon;
-                                    maps\mp\gametypes\bel::spawnPlayer();
-                                }
-                            }
-                        }
-                    }
-                    else
-                    {
-                        if ( (self.sessionstate != "playing") && (self.respawnwait != true) )
-                        {
-                            if (isdefined (self.pers["team"]))
-                            {
-                                if ( (self.pers["team"] == "allies") && (axisweapon != true) )
-                                    self.pers["LastAlliedWeapon"] = weapon;
-                                else if ( (self.pers["team"] == "axis") && (axisweapon == true) )
-                                    self.pers["LastAxisWeapon"] = weapon;
-                                else
-                                    continue;
-
-                                self.pers["weapon"] = weapon;
-                                maps\mp\gametypes\bel::spawnPlayer();
-                            }
-                        }
-                        else
-                        {
-                            weaponname = maps\mp\gametypes\_teams::getWeaponName(weapon);			
-                            if (axisweapon == true)
-                            {
-                                self.pers["LastAxisWeapon"] = weapon;
-                                if (maps\mp\gametypes\_teams::useAn(weapon))
-                                    self iprintln(&"MPSCRIPT_YOU_WILL_SPAWN_AXIS_WITH_AN", weaponname);
-                                else
-                                    self iprintln(&"MPSCRIPT_YOU_WILL_SPAWN_AXIS_WITH_A", weaponname);
-                            }
-                            else
-                            {
-                                self.pers["LastAlliedWeapon"] = weapon;
-                                if (maps\mp\gametypes\_teams::useAn(weapon))
-                                    self iprintln(&"MPSCRIPT_YOU_WILL_SPAWN_ALLIED_WITH_AN", weaponname);
-                                else
-                                    self iprintln(&"MPSCRIPT_YOU_WILL_SPAWN_ALLIED_WITH_A", weaponname);
-                            }
-
-                            if ( (self.pers["team"] == "allies") && (axisweapon != true) )
-                                self.pers["nextWeapon"] = weapon;
-                            else if ( (self.pers["team"] == "axis") && (axisweapon == true) )
-                                self.pers["nextWeapon"] = weapon;
-                            else
-                                continue;
-                        }
-
-                        if (isdefined (self.pers["team"]))
-                        {	
-                            if (axisweapon != true)
-                            {
-                                self.pers["LastAlliedWeapon"] = weapon;
-                                continue;
-                            }
-                            else if (axisweapon == true)
-                            {
-                                self.pers["LastAxisWeapon"] = weapon;
-                                continue;
-                            }
-                        }
-                        continue;
-                    }
-                }
-                else if(menu == game["menu_viewmap"])
-                {
-                    switch(response)
-                    {
-                        case "team":
-                            self openMenu(game["menu_team"]);
-                            break;
-
-                        case "weapon":
-                            if ( (self.pers["team"] == "axis") || (self.pers["team"] == "allies") )
-                                self openMenu(game["menu_weapon_all"]);
-                            break;
-
-                        case "callvote":
-                            self openMenu(game["menu_callvote"]);
-                            break;
-                    }
-                }
-                else if(menu == game["menu_callvote"])
-                {
-                    switch(response)
-                    {
-                        case "team":
-                            self openMenu(game["menu_team"]);
-                            break;
-
-                        case "weapon":
-                            if ( (self.pers["team"] == "axis") || (self.pers["team"] == "allies") )
-                                self openMenu(game["menu_weapon_all"]);
-                            break;
-
-                        case "viewmap":
-                            self openMenu(game["menu_viewmap"]);
-                            break;
-                    }
-                }
-                else if(menu == game["menu_quickcommands"])
-                    maps\mp\gametypes\_teams::quickcommands(response);
-                else if(menu == game["menu_quickstatements"])
-                    maps\mp\gametypes\_teams::quickstatements(response);
-                else if(menu == game["menu_quickresponses"])
-                    maps\mp\gametypes\_teams::quickresponses(response);
-            }
-        }
-        break;
-
-        case "re":
-        {
-            self.statusicon = "gfx/hud/hud@status_connecting.tga";
-            self waittill("begin");
-            self.statusicon = "";
-            self.hudelem = [];
-            
-            if(!isdefined(self.pers["team"]))
-                iprintln(&"MPSCRIPT_CONNECTED", self);
-
-            lpselfnum = self getEntityNumber();
-            logPrint("J;" + lpselfnum + ";" + self.name + "\n");
-
-            self.objs_held = 0;
-            if(game["state"] == "intermission")
-            {
-                maps\mp\gametypes\re::spawnIntermission();
-                return;
-            }
-
-            level endon("intermission");
-
-            if(isdefined(self.pers["team"]) && self.pers["team"] != "spectator")
-            {
-                self setClientCvar("scr_showweapontab", "1");
-
-                if(self.pers["team"] == "allies")
-                    self setClientCvar("g_scriptMainMenu", game["menu_weapon_allies"]);
-                else
-                    self setClientCvar("g_scriptMainMenu", game["menu_weapon_axis"]);
-
-                if(isdefined(self.pers["weapon"]))
-                    maps\mp\gametypes\re::spawnPlayer();
-                else
-                {
-                    self.sessionteam = "spectator";
-
-                    maps\mp\gametypes\re::spawnSpectator();
-
-                    if(self.pers["team"] == "allies")
-                        self openMenu(game["menu_weapon_allies"]);
-                    else
-                        self openMenu(game["menu_weapon_axis"]);
-                }
-            }
-            else
-            {
-                self setClientCvar("g_scriptMainMenu", game["menu_team"]);
-                self setClientCvar("scr_showweapontab", "0");
-
-                if(!isdefined(self.pers["team"]))
-                self openMenu(game["menu_team"]);
-
-                self.pers["team"] = "spectator";
-                self.sessionteam = "spectator";
-
-                maps\mp\gametypes\re::spawnSpectator();
-            }
-
-            for(;;)
-            {
-                self waittill("menuresponse", menu, response);
-
-                if(response == "open" || response == "close")
-                    continue;
-
-                if(menu == game["menu_team"])
-                {
-                    switch(response)
-                    {
-                    case "allies":
-                    case "axis":
-                    case "autoassign":
-                        if(response == "autoassign")
-                        {
-                            numonteam["allies"] = 0;
-                            numonteam["axis"] = 0;
-
-                            players = getentarray("player", "classname");
-                            for(i = 0; i < players.size; i++)
-                            {
-                                player = players[i];
-
-                                if(!isdefined(player.pers["team"]) || player.pers["team"] == "spectator" || player == self)
-                                    continue;
-
-                                numonteam[player.pers["team"]]++;
-                            }
-
-                            // if teams are equal return the team with the lowest score
-                            if(numonteam["allies"] == numonteam["axis"])
-                            {
-                                if(getTeamScore("allies") == getTeamScore("axis"))
-                                {
-                                    teams[0] = "allies";
-                                    teams[1] = "axis";
-                                    response = teams[randomInt(2)];
-                                }
-                                else if(getTeamScore("allies") < getTeamScore("axis"))
-                                    response = "allies";
-                                else
-                                    response = "axis";
-                            }
-                            else if(numonteam["allies"] < numonteam["axis"])
-                                response = "allies";
-                            else
-                                response = "axis";
-                        }
-
-                        if(response == self.pers["team"] && self.sessionstate == "playing")
-                            break;
-
-                        if(response != self.pers["team"] && self.sessionstate == "playing")
-                            self suicide();
-
-                        self.pers["team"] = response;
-                        self.pers["weapon"] = undefined;
                         self.pers["weapon1"] = undefined;
                         self.pers["weapon2"] = undefined;
                         self.pers["spawnweapon"] = undefined;
-                        self.pers["savedmodel"] = undefined;
+                    }
+                    self.pers["savedmodel"] = undefined;
 
-                        self setClientCvar("scr_showweapontab", "1");
+                    self setClientCvar("scr_showweapontab", "1");
 
-                        if(self.pers["team"] == "allies")
-                        {
-                            self setClientCvar("g_scriptMainMenu", game["menu_weapon_allies"]);
-                            self openMenu(game["menu_weapon_allies"]);
-                        }
-                        else
-                        {
-                            self setClientCvar("g_scriptMainMenu", game["menu_weapon_axis"]);
-                            self openMenu(game["menu_weapon_axis"]);
-                        }
-                        break;
+                    if(self.pers["team"] == "allies")
+                    {
+                        self setClientCvar("g_scriptMainMenu", game["menu_weapon_allies"]);
+                        self openMenu(game["menu_weapon_allies"]);
+                    }
+                    else
+                    {
+                        self setClientCvar("g_scriptMainMenu", game["menu_weapon_axis"]);
+                        self openMenu(game["menu_weapon_axis"]);
+                    }
+                    break;
 
-                    case "spectator":
-                        if(self.pers["team"] != "spectator")
+                case "spectator":
+                    if(self.pers["team"] != "spectator")
+                    {
+                        if(gametype == "sd" || gametype == "re")
                         {
                             if(isalive(self))
                                 self suicide();
-
-                            self.pers["team"] = "spectator";
-                            self.pers["weapon"] = undefined;
+                        }
+                        
+                        self.pers["team"] = "spectator";
+                        self.pers["weapon"] = undefined;
+                        if(gametype == "sd" || gametype == "re")
+                        {
                             self.pers["weapon1"] = undefined;
                             self.pers["weapon2"] = undefined;
                             self.pers["spawnweapon"] = undefined;
-                            self.pers["savedmodel"] = undefined;
-
-                            self.sessionteam = "spectator";
-                            self setClientCvar("g_scriptMainMenu", game["menu_team"]);
-                            self setClientCvar("scr_showweapontab", "0");
+                        }
+                        else if(gametype == "bel")
+                        {
+                            self.pers["LastAxisWeapon"] = undefined;
+                            self.pers["LastAlliedWeapon"] = undefined;
+                        }
+                        self.pers["savedmodel"] = undefined;
+                        
+                        self.sessionteam = "spectator";
+                        self setClientCvar("g_scriptMainMenu", game["menu_team"]);
+                        self setClientCvar("scr_showweapontab", "0");
+                        if(gametype == "bel")
+                        {
+                            if (isdefined (self.blackscreen))
+                                self.blackscreen destroy();
+                            if (isdefined (self.blackscreentext))
+                                self.blackscreentext destroy();
+                            if (isdefined (self.blackscreentext2))
+                                self.blackscreentext2 destroy();
+                            if (isdefined (self.blackscreentimer))
+                                self.blackscreentimer destroy();
+                        }
+                        if(gametype == "sd")
+                        {
+                            maps\mp\gametypes\sd::spawnSpectator();
+                        }
+                        else if(gametype == "re")
+                        {
                             maps\mp\gametypes\re::spawnSpectator();
                         }
-                        break;
-
-                    case "weapon":
+                        else if(gametype == "dm")
+                        {
+                            maps\mp\gametypes\dm::spawnSpectator();
+                        }
+                        else if(gametype == "tdm")
+                        {
+                            maps\mp\gametypes\tdm::spawnSpectator();
+                        }
+                        else if(gametype == "bel")
+                        {
+                            self maps\mp\gametypes\bel::spawnSpectator();
+                            maps\mp\gametypes\bel::CheckAllies_andMoveAxis_to_Allies();
+                        }
+                    }
+                    break;
+                
+                case "weapon":
+                    if(gametype == "bel")
+                    {
+                        if ( (self.pers["team"] == "axis") || (self.pers["team"] == "allies") )
+                            self openMenu(game["menu_weapon_all"]);
+                    }
+                    else
+                    {
                         if(self.pers["team"] == "allies")
                             self openMenu(game["menu_weapon_allies"]);
                         else if(self.pers["team"] == "axis")
                             self openMenu(game["menu_weapon_axis"]);
-                        break;
-
-                    case "viewmap":
-                        self openMenu(game["menu_viewmap"]);
-                        break;
-
-                    case "callvote":
-                        self openMenu(game["menu_callvote"]);
-                        break;
                     }
-                }
-                else if(menu == game["menu_weapon_allies"] || menu == game["menu_weapon_axis"])
+                    break;
+                
+                case "viewmap":
+                    self openMenu(game["menu_viewmap"]);
+                    break;
+                
+                case "callvote":
+                    self openMenu(game["menu_callvote"]);
+                    break;
+            }
+        }
+        else if(gametype == "bel" && (menu == game["menu_weapon_all"] || menu == game["menu_weapon_allies_only"] || menu == game["menu_weapon_axis_only"]))
+        {
+            if(response == "team")
+            {
+                self openMenu(game["menu_team"]);
+                continue;
+            }
+            else if(response == "viewmap")
+            {
+                self openMenu(game["menu_viewmap"]);
+                continue;
+            }
+            else if(response == "callvote")
+            {
+                self openMenu(game["menu_callvote"]);
+                continue;
+            }
+            
+            if(!isdefined(self.pers["team"]) || (self.pers["team"] != "allies" && self.pers["team"] != "axis"))
+                continue;
+            
+            weapon = self maps\mp\gametypes\_teams::restrict_anyteam(response);
+
+            if(weapon == "restricted")
+            {
+                self openMenu(menu);
+                continue;
+            }
+            
+            axisweapon = false;
+            if (response == "kar98k_mp")
+                axisweapon = true;
+            else if (response == "mp40_mp")
+                axisweapon = true;
+            else if (response == "mp44_mp")
+                axisweapon = true;
+            else if (response == "kar98k_sniper_mp")
+                axisweapon = true;
+
+            if(isdefined(self.pers["weapon"]) && self.pers["weapon"] == weapon)
+                continue;
+
+            if(!isdefined(self.pers["weapon"]))
+            {
+                if (axisweapon == true)
+                    self.pers["LastAxisWeapon"] = weapon;
+                else
+                    self.pers["LastAlliedWeapon"] = weapon;
+
+                if (self.respawnwait != true)
                 {
-                    if(response == "team")
+                    if (self.pers["team"] == "allies")
                     {
-                        self openMenu(game["menu_team"]);
-                        continue;
-                    }
-                    else if(response == "viewmap")
-                    {
-                        self openMenu(game["menu_viewmap"]);
-                        continue;
-                    }
-                    else if(response == "callvote")
-                    {
-                        self openMenu(game["menu_callvote"]);
-                        continue;
-                    }
-
-                    if(!isdefined(self.pers["team"]) || (self.pers["team"] != "allies" && self.pers["team"] != "axis"))
-                        continue;
-
-                    weapon = self maps\mp\gametypes\_teams::restrict(response);
-
-                    if(weapon == "restricted")
-                    {
-                        self openMenu(menu);
-                        continue;
-                    }
-
-                    if(isdefined(self.pers["weapon"]) && self.pers["weapon"] == weapon && !isdefined(self.pers["weapon1"]))
-                        continue;
-
-                    if(!game["matchstarted"])
-                    {
-                        self.pers["weapon"] = weapon;
-                        self.spawned = undefined;
-                        maps\mp\gametypes\re::spawnPlayer();
-                        self thread printJoinedTeam(self.pers["team"]);
-                        level maps\mp\gametypes\re::checkMatchStart();
-                    }
-                    else if(!level.roundstarted)
-                    {
-                        if(isdefined(self.pers["weapon"]))
+                        if (axisweapon == true)
                         {
-                            self.pers["weapon"] = weapon;
-                            self setWeaponSlotWeapon("primary", weapon);
-                            self setWeaponSlotAmmo("primary", 999);
-                            self setWeaponSlotClipAmmo("primary", 999);
-                            self switchToWeapon(weapon);
+                            self openMenu(menu);
+                            continue;
                         }
                         else
                         {
                             self.pers["weapon"] = weapon;
+                            maps\mp\gametypes\bel::spawnPlayer();
+                        }
 
-                            if(!level.exist[self.pers["team"]])
-                            {
-                                self.spawned = undefined;
-                                maps\mp\gametypes\re::spawnPlayer();
-                                self thread printJoinedTeam(self.pers["team"]);
-                                level maps\mp\gametypes\re::checkMatchStart();
-                            }
-                            else
-                            {
-                                maps\mp\gametypes\re::spawnPlayer();
-                                self thread printJoinedTeam(self.pers["team"]);
-                            }
+                    }
+                    else if (self.pers["team"] == "axis")
+                    {
+                        if (axisweapon != true)
+                        {
+                            self openMenu(menu);
+                            continue;
+                        }
+                        else
+                        {
+                            self.pers["weapon"] = weapon;
+                            maps\mp\gametypes\bel::spawnPlayer();
+                        }
+                    }
+                }
+            }
+            else
+            {
+                if ( (self.sessionstate != "playing") && (self.respawnwait != true) )
+                {
+                    if (isdefined (self.pers["team"]))
+                    {
+                        if ( (self.pers["team"] == "allies") && (axisweapon != true) )
+                            self.pers["LastAlliedWeapon"] = weapon;
+                        else if ( (self.pers["team"] == "axis") && (axisweapon == true) )
+                            self.pers["LastAxisWeapon"] = weapon;
+                        else
+                            continue;
+
+                        self.pers["weapon"] = weapon;
+                        maps\mp\gametypes\bel::spawnPlayer();
+                    }
+                }
+                else
+                {
+                    weaponname = maps\mp\gametypes\_teams::getWeaponName(weapon);			
+                    if (axisweapon == true)
+                    {
+                        self.pers["LastAxisWeapon"] = weapon;
+                        if (maps\mp\gametypes\_teams::useAn(weapon))
+                            self iprintln(&"MPSCRIPT_YOU_WILL_SPAWN_AXIS_WITH_AN", weaponname);
+                        else
+                            self iprintln(&"MPSCRIPT_YOU_WILL_SPAWN_AXIS_WITH_A", weaponname);
+                    }
+                    else
+                    {
+                        self.pers["LastAlliedWeapon"] = weapon;
+                        if (maps\mp\gametypes\_teams::useAn(weapon))
+                            self iprintln(&"MPSCRIPT_YOU_WILL_SPAWN_ALLIED_WITH_AN", weaponname);
+                        else
+                            self iprintln(&"MPSCRIPT_YOU_WILL_SPAWN_ALLIED_WITH_A", weaponname);
+                    }
+
+                    if ( (self.pers["team"] == "allies") && (axisweapon != true) )
+                        self.pers["nextWeapon"] = weapon;
+                    else if ( (self.pers["team"] == "axis") && (axisweapon == true) )
+                        self.pers["nextWeapon"] = weapon;
+                    else
+                        continue;
+                }
+
+                if (isdefined (self.pers["team"]))
+                {	
+                    if (axisweapon != true)
+                    {
+                        self.pers["LastAlliedWeapon"] = weapon;
+                        continue;
+                    }
+                    else if (axisweapon == true)
+                    {
+                        self.pers["LastAxisWeapon"] = weapon;
+                        continue;
+                    }
+                }
+                continue;
+            }
+        }
+        else if(menu == game["menu_weapon_allies"] || menu == game["menu_weapon_axis"])
+        {
+            if(response == "team")
+            {
+                self openMenu(game["menu_team"]);
+                continue;
+            }
+            else if(response == "viewmap")
+            {
+                self openMenu(game["menu_viewmap"]);
+                continue;
+            }
+            else if(response == "callvote")
+            {
+                self openMenu(game["menu_callvote"]);
+                continue;
+            }
+
+            if(!isdefined(self.pers["team"]) || (self.pers["team"] != "allies" && self.pers["team"] != "axis"))
+                continue;
+
+            weapon = self maps\mp\gametypes\_teams::restrict(response);
+
+            if(weapon == "restricted")
+            {
+                self openMenu(menu);
+                continue;
+            }
+
+            if(gametype == "sd" || gametype == "re")
+            {
+                if(isdefined(self.pers["weapon"]) && self.pers["weapon"] == weapon && !isdefined(self.pers["weapon1"]))
+                    continue;
+
+            }
+            else if(gametype == "dm" || gametype == "tdm")
+            {
+                if(isdefined(self.pers["weapon"]) && self.pers["weapon"] == weapon)
+                    continue;
+            }
+
+            if((gametype == "sd" || gametype == "re") && !game["matchstarted"])
+            {
+                self.pers["weapon"] = weapon;
+                self.spawned = undefined;
+                if(gametype == "sd")
+                {
+                    maps\mp\gametypes\sd::spawnPlayer();
+                }
+                else if(gametype == "re")
+                {
+                    maps\mp\gametypes\re::spawnPlayer();
+                }
+                self thread printJoinedTeam(self.pers["team"]);
+                if(gametype == "sd")
+                {
+                    level maps\mp\gametypes\sd::checkMatchStart();
+                }
+                else if(gametype == "re")
+                {
+                    level maps\mp\gametypes\re::checkMatchStart();
+                }
+            }
+            else if((gametype == "sd" || gametype == "re") && !level.roundstarted)
+            {
+                if(isdefined(self.pers["weapon"]))
+                {
+                    self.pers["weapon"] = weapon;
+                    self setWeaponSlotWeapon("primary", weapon);
+                    self setWeaponSlotAmmo("primary", 999);
+                    self setWeaponSlotClipAmmo("primary", 999);
+                    self switchToWeapon(weapon);
+                }
+                else
+                {			 	
+                    self.pers["weapon"] = weapon;
+                    if(!level.exist[self.pers["team"]])
+                    {
+                        self.spawned = undefined;
+                        if(gametype == "sd")
+                        {
+                            maps\mp\gametypes\sd::spawnPlayer();
+                        }
+                        else if(gametype == "re")
+                        {
+                            maps\mp\gametypes\re::spawnPlayer();
+                        }
+                        self thread printJoinedTeam(self.pers["team"]);
+                        if(gametype == "sd")
+                        {
+                            level maps\mp\gametypes\sd::checkMatchStart();
+                        }
+                        else if(gametype == "re")
+                        {
+                            level maps\mp\gametypes\re::checkMatchStart();
                         }
                     }
                     else
                     {
-                        if(isdefined(self.pers["weapon"]))
-                            self.oldweapon = self.pers["weapon"];
-
-                        self.pers["weapon"] = weapon;
-                        self.sessionteam = self.pers["team"];
-
-                        if(self.sessionstate != "playing")
-                            self.statusicon = "gfx/hud/hud@status_dead.tga";
-
-                        if(self.pers["team"] == "allies")
-                            otherteam = "axis";
-                        else if(self.pers["team"] == "axis")
-                            otherteam = "allies";
-                            
-                        // if joining a team that has no opponents, just spawn
-                        if(!level.didexist[otherteam] && !level.roundended)
+                        if(gametype == "sd")
                         {
-                            self.spawned = undefined;
-                            maps\mp\gametypes\re::spawnPlayer();
-                            self thread printJoinedTeam(self.pers["team"]);
-                        }				
-                        else if(!level.didexist[self.pers["team"]] && !level.roundended)
+                            maps\mp\gametypes\sd::spawnPlayer();
+                        }
+                        else if(gametype == "re")
                         {
-                            self.spawned = undefined;
                             maps\mp\gametypes\re::spawnPlayer();
-                            self thread printJoinedTeam(self.pers["team"]);
+                        }
+                        self thread printJoinedTeam(self.pers["team"]);
+                    }
+                }
+            }
+            else
+            {
+                if(gametype == "sd" || gametype == "re")
+                {
+                    if(isdefined(self.pers["weapon"]))
+                        self.oldweapon = self.pers["weapon"];
+                    
+                    self.pers["weapon"] = weapon;
+                    self.sessionteam = self.pers["team"];
+
+                    if(self.sessionstate != "playing")
+                        self.statusicon = "gfx/hud/hud@status_dead.tga";
+                    
+                    if(self.pers["team"] == "allies")
+                        otherteam = "axis";
+                    else if(self.pers["team"] == "axis")
+                        otherteam = "allies";
+                    
+                    // if joining a team that has no opponents, just spawn
+                    if(!level.didexist[otherteam] && !level.roundended)
+                    {
+                        self.spawned = undefined;
+                        if(gametype == "sd")
+                        {
+                            maps\mp\gametypes\sd::spawnPlayer();
+                        }
+                        else if(gametype == "re")
+                        {
+                            maps\mp\gametypes\re::spawnPlayer();
+                        }
+                        self thread printJoinedTeam(self.pers["team"]);
+                    }
+                    else if(!level.didexist[self.pers["team"]] && !level.roundended)
+                    {
+                        self.spawned = undefined;
+                        if(gametype == "sd")
+                        {
+                            maps\mp\gametypes\sd::spawnPlayer();
+                        }
+                        else if(gametype == "re")
+                        {
+                            maps\mp\gametypes\re::spawnPlayer();
+                        }
+                        self thread printJoinedTeam(self.pers["team"]);
+                        if(gametype == "sd")
+                        {
+                            level maps\mp\gametypes\sd::checkMatchStart();
+                        }
+                        else if(gametype == "re")
+                        {
                             level maps\mp\gametypes\re::checkMatchStart();
                         }
-                        else
-                        {
-                            weaponname = maps\mp\gametypes\_teams::getWeaponName(self.pers["weapon"]);
+                    }
+                    else
+                    {
+                        weaponname = maps\mp\gametypes\_teams::getWeaponName(self.pers["weapon"]);
 
-                            if(self.pers["team"] == "allies")
-                            {
-                                if(maps\mp\gametypes\_teams::useAn(self.pers["weapon"]))
-                                    self iprintln(&"MPSCRIPT_YOU_WILL_SPAWN_ALLIED_WITH_AN_NEXT_ROUND", weaponname);
-                                else
-                                    self iprintln(&"MPSCRIPT_YOU_WILL_SPAWN_ALLIED_WITH_A_NEXT_ROUND", weaponname);
-                            }
-                            else if(self.pers["team"] == "axis")
-                            {
-                                if(maps\mp\gametypes\_teams::useAn(self.pers["weapon"]))
-                                    self iprintln(&"MPSCRIPT_YOU_WILL_SPAWN_AXIS_WITH_AN_NEXT_ROUND", weaponname);
-                                else
-                                    self iprintln(&"MPSCRIPT_YOU_WILL_SPAWN_AXIS_WITH_A_NEXT_ROUND", weaponname);
-                            }
+                        if(self.pers["team"] == "allies")
+                        {
+                            if(maps\mp\gametypes\_teams::useAn(self.pers["weapon"]))
+                                self iprintln(&"MPSCRIPT_YOU_WILL_SPAWN_ALLIED_WITH_AN_NEXT_ROUND", weaponname);
+                            else
+                                self iprintln(&"MPSCRIPT_YOU_WILL_SPAWN_ALLIED_WITH_A_NEXT_ROUND", weaponname);
+                        }
+                        else if(self.pers["team"] == "axis")
+                        {
+                            if(maps\mp\gametypes\_teams::useAn(self.pers["weapon"]))
+                                self iprintln(&"MPSCRIPT_YOU_WILL_SPAWN_AXIS_WITH_AN_NEXT_ROUND", weaponname);
+                            else
+                                self iprintln(&"MPSCRIPT_YOU_WILL_SPAWN_AXIS_WITH_A_NEXT_ROUND", weaponname);
                         }
                     }
                 }
-                else if(menu == game["menu_viewmap"])
+                else if(gametype == "dm" || gametype == "tdm")
                 {
-                    switch(response)
+                    if(!isdefined(self.pers["weapon"]))
                     {
-                    case "team":
-                        self openMenu(game["menu_team"]);
-                        break;
-
-                    case "weapon":
-                        if(self.pers["team"] == "allies")
-                            self openMenu(game["menu_weapon_allies"]);
-                        else if(self.pers["team"] == "axis")
-                            self openMenu(game["menu_weapon_axis"]);
-                        break;
-
-                    case "callvote":
-                        self openMenu(game["menu_callvote"]);
-                        break;
+                        self.pers["weapon"] = weapon;
+                        if(gametype == "dm")
+                        {
+                            maps\mp\gametypes\dm::spawnPlayer();
+                        }
+                        else if(gametype == "tdm")
+                        {
+                            maps\mp\gametypes\tdm::spawnPlayer();
+                            self thread printJoinedTeam(self.pers["team"]);
+                        }
+                    }
+                    else
+                    {
+                        self.pers["weapon"] = weapon;
+                        
+                        weaponname = maps\mp\gametypes\_teams::getWeaponName(self.pers["weapon"]);
+                        
+                        if(maps\mp\gametypes\_teams::useAn(self.pers["weapon"]))
+                            self iprintln(&"MPSCRIPT_YOU_WILL_RESPAWN_WITH_AN", weaponname);
+                        else
+                            self iprintln(&"MPSCRIPT_YOU_WILL_RESPAWN_WITH_A", weaponname);
                     }
                 }
-                else if(menu == game["menu_callvote"])
-                {
-                    switch(response)
-                    {
-                    case "team":
-                        self openMenu(game["menu_team"]);
-                        break;
-
-                    case "weapon":
-                        if(self.pers["team"] == "allies")
-                            self openMenu(game["menu_weapon_allies"]);
-                        else if(self.pers["team"] == "axis")
-                            self openMenu(game["menu_weapon_axis"]);
-                        break;
-
-                    case "viewmap":
-                        self openMenu(game["menu_viewmap"]);
-                        break;
-                    }
-                }
-                else if(menu == game["menu_quickcommands"])
-                    maps\mp\gametypes\_teams::quickcommands(response);
-                else if(menu == game["menu_quickstatements"])
-                    maps\mp\gametypes\_teams::quickstatements(response);
-                else if(menu == game["menu_quickresponses"])
-                    maps\mp\gametypes\_teams::quickresponses(response);
             }
         }
-        break;
-
-        default:
+        else if(menu == game["menu_viewmap"])
         {
-            printLn("##### centralizer: Callback_PlayerConnect: default");
+            switch(response)
+            {
+            case "team":
+                self openMenu(game["menu_team"]);
+                break;
+            
+            case "weapon":
+                if(gametype == "bel")
+                {
+                    if ( (self.pers["team"] == "axis") || (self.pers["team"] == "allies") )
+                        self openMenu(game["menu_weapon_all"]);
+                }
+                else
+                {
+                    if(self.pers["team"] == "allies")
+                        self openMenu(game["menu_weapon_allies"]);
+                    else if(self.pers["team"] == "axis")
+                        self openMenu(game["menu_weapon_axis"]);
+                }
+                break;
+            
+            case "callvote":
+                self openMenu(game["menu_callvote"]);
+                break;
+            }
         }
-        break;
+        else if(menu == game["menu_callvote"])
+        {
+            switch(response)
+            {
+            case "team":
+                self openMenu(game["menu_team"]);
+                break;
+            
+            case "weapon":
+                if(gametype == "bel")
+                {
+                    if ( (self.pers["team"] == "axis") || (self.pers["team"] == "allies") )
+                        self openMenu(game["menu_weapon_all"]);
+                }
+                else
+                {
+                    if(self.pers["team"] == "allies")
+                        self openMenu(game["menu_weapon_allies"]);
+                    else if(self.pers["team"] == "axis")
+                        self openMenu(game["menu_weapon_axis"]);
+                }
+                break;
+            
+            case "viewmap":
+                    self openMenu(game["menu_viewmap"]);
+                    break;
+            }
+        }
+        else if(menu == game["menu_quickcommands"])
+            maps\mp\gametypes\_teams::quickcommands(response);
+        else if(menu == game["menu_quickstatements"])
+            maps\mp\gametypes\_teams::quickstatements(response);
+        else if(menu == game["menu_quickresponses"])
+            maps\mp\gametypes\_teams::quickresponses(response);
     }
 }
 
