@@ -1113,87 +1113,52 @@ Callback_PlayerConnect(gametype)
 
 Callback_PlayerDisconnect(gametype)
 {
-    switch(gametype)
+    iprintln(&"MPSCRIPT_DISCONNECTED", self);
+
+    lpselfnum = self getEntityNumber();
+    logPrint("Q;" + lpselfnum + ";" + self.name + "\n");
+
+    if(gametype == "re")
     {
-        case "sd":
+        if (isdefined (self.objs_held))
         {
-            iprintln(&"MPSCRIPT_DISCONNECTED", self);
-    
-            lpselfnum = self getEntityNumber();
-            logPrint("Q;" + lpselfnum + ";" + self.name + "\n");
-
-            if(game["matchstarted"])
-                level thread maps\mp\gametypes\sd::updateTeamStatus();
-        }
-        break;
-
-        case "dm":
-        {
-            iprintln(&"MPSCRIPT_DISCONNECTED", self);
-
-            lpselfnum = self getEntityNumber();
-            logPrint("Q;" + lpselfnum + ";" + self.name + "\n");
-        }
-        break;
-
-        case "tdm":
-        {
-            iprintln(&"MPSCRIPT_DISCONNECTED", self);
-
-            lpselfnum = self getEntityNumber();
-            logPrint("Q;" + lpselfnum + ";" + self.name + "\n");
-        }
-        break;
-
-        case "bel":
-        {
-            iprintln(&"MPSCRIPT_DISCONNECTED", self);
-
-            lpselfnum = self getEntityNumber();
-            logPrint("Q;" + lpselfnum + ";" + self.name + "\n");
-
-            self.pers["team"] = "spectator";
-            self maps\mp\gametypes\bel::check_delete_objective();
-            maps\mp\gametypes\bel::CheckAllies_andMoveAxis_to_Allies();
-        }
-        break;
-
-        case "re":
-        {
-            iprintln(&"MPSCRIPT_DISCONNECTED", self);
-
-            lpselfnum = self getEntityNumber();
-            logPrint("Q;" + lpselfnum + ";" + self.name + "\n");
-
-            if (isdefined (self.objs_held))
+            if (self.objs_held > 0)
             {
-                if (self.objs_held > 0)
+                for (i=0;i<(level.numobjectives + 1);i++)
                 {
-                    for (i=0;i<(level.numobjectives + 1);i++)
+                    if (isdefined (self.hasobj[i]))
                     {
-                        if (isdefined (self.hasobj[i]))
-                        {
-                            //if (self isonground())
-                                self.hasobj[i] maps\mp\gametypes\re::drop_objective_on_disconnect_or_death(self);
-                            //else
-                            //	self.hasobj[i] maps\mp\gametypes\re::drop_objective_on_disconnect_or_death(self, "trace");
-                        }
+                        //if (self isonground())
+                            self.hasobj[i] maps\mp\gametypes\re::drop_objective_on_disconnect_or_death(self);
+                        //else
+                        //	self.hasobj[i] maps\mp\gametypes\re::drop_objective_on_disconnect_or_death(self, "trace");
                     }
                 }
             }
-
-            self notify ("death");
-            
-            if(game["matchstarted"])
-            level thread maps\mp\gametypes\re::updateTeamStatus();
         }
-        break;
 
-        default:
+        self notify ("death");
+    }
+    else if(gametype == "bel")
+    {
+        self.pers["team"] = "spectator";
+        self maps\mp\gametypes\bel::check_delete_objective();
+        maps\mp\gametypes\bel::CheckAllies_andMoveAxis_to_Allies();
+    }
+
+    if(gametype == "sd" || gametype == "re")
+    {
+        if(game["matchstarted"])
         {
-            printLn("##### centralizer: Callback_PlayerDisconnect: default");
+            if(gametype == "sd")
+            {
+                level thread maps\mp\gametypes\sd::updateTeamStatus();
+            }
+            else if(gametype == "re")
+            {
+                level thread maps\mp\gametypes\re::updateTeamStatus();
+            }
         }
-        break;
     }
 }
 
