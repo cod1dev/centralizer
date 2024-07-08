@@ -130,42 +130,42 @@ main()
 
 Callback_StartGameType()
 {
-	centralizer::Callback_StartGameType(getcvar("g_gametype"));
+	centralizer::Callback_StartGameType();
 }
 
 Callback_PlayerConnect()
 {
-	centralizer::Callback_PlayerConnect(getcvar("g_gametype"));
+	centralizer::Callback_PlayerConnect();
 }
 
 Callback_PlayerDisconnect()
 {
-	centralizer::Callback_PlayerDisconnect(getcvar("g_gametype"));
+	centralizer::Callback_PlayerDisconnect();
 }
 
 Callback_PlayerDamage(eInflictor, eAttacker, iDamage, iDFlags, sMeansOfDeath, sWeapon, vPoint, vDir, sHitLoc)
 {
-	centralizer::Callback_PlayerDamage(getcvar("g_gametype"), eInflictor, eAttacker, iDamage, iDFlags, sMeansOfDeath, sWeapon, vPoint, vDir, sHitLoc);
+	centralizer::Callback_PlayerDamage(eInflictor, eAttacker, iDamage, iDFlags, sMeansOfDeath, sWeapon, vPoint, vDir, sHitLoc);
 }
 
 Callback_PlayerKilled(eInflictor, attacker, iDamage, sMeansOfDeath, sWeapon, vDir, sHitLoc)
 {
-	centralizer::Callback_PlayerKilled(getcvar("g_gametype"), eInflictor, attacker, iDamage, sMeansOfDeath, sWeapon, vDir, sHitLoc);
+	centralizer::Callback_PlayerKilled(eInflictor, attacker, iDamage, sMeansOfDeath, sWeapon, vDir, sHitLoc);
 }
 
 spawnPlayer()
 {
-	centralizer::spawnPlayer(getcvar("g_gametype"));
+	centralizer::spawnPlayer();
 }
 
 spawnSpectator()
 {	
-	centralizer::spawnSpectator(getcvar("g_gametype"));
+	centralizer::spawnSpectator();
 }
 
 spawnIntermission()
 {
-	centralizer::spawnIntermission(getcvar("g_gametype"));
+	centralizer::spawnIntermission();
 }
 
 respawn(noclick, delay)
@@ -315,7 +315,7 @@ startGame()
 
 endMap()
 {
-	centralizer::endMap(getcvar("g_gametype"));
+	centralizer::endMap();
 }
 
 checkTimeLimit()
@@ -962,5 +962,5 @@ client_print(text)
 
 killcam(attackerNum, delay, option)
 {
-	centralizer::killcam(getcvar("g_gametype"), attackerNum, delay, option);
+	centralizer::killcam(attackerNum, delay, option);
 }

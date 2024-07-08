@@ -1,5 +1,7 @@
-Callback_StartGameType(gametype)
+Callback_StartGameType()
 {
+    gametype = getcvar("g_gametype");
+
     // if this is a fresh map start, set nationalities based on cvars, otherwise leave game variable nationalities as set in the level script
     if((gametype == "dm" || gametype == "tdm" || gametype == "bel") || ((gametype == "sd" || gametype == "re") && !isdefined(game["gamestarted"])))
     {
@@ -227,11 +229,11 @@ Callback_StartGameType(gametype)
         
         if(gametype == "sd")
         {
-            //thread maps\mp\gametypes\sd::addBotClients();
+            //thread addBotClients();
         }
         else if(gametype == "re")
         {
-            //thread maps\mp\gametypes\re::addBotClients();
+            //thread addBotClients();
         }
     }
 
@@ -257,24 +259,24 @@ Callback_StartGameType(gametype)
         thread maps\mp\gametypes\sd::bombzones();
         thread maps\mp\gametypes\sd::startGame();
         thread maps\mp\gametypes\sd::updateScriptCvars();
-        //thread maps\mp\gametypes\sd::addBotClients();
+        //thread addBotClients();
     }
     else if(gametype == "re")
     {
         thread maps\mp\gametypes\re::startGame();
         thread maps\mp\gametypes\re::updateScriptCvars();
-        //thread maps\mp\gametypes\re::addBotClients();
+        //thread addBotClients();
     }
     else if(gametype == "dm")
     {
         thread maps\mp\gametypes\dm::startGame();
-    //	thread maps\mp\gametypes\dm::addBotClients(); // For development testing
+    //	thread addBotClients(); // For development testing
         thread maps\mp\gametypes\dm::updateScriptCvars();
     }
     else if(gametype == "tdm")
     {
         thread maps\mp\gametypes\tdm::startGame();
-        //thread maps\mp\gametypes\tdm::addBotClients(); // For development testing
+        //thread addBotClients(); // For development testing
         thread maps\mp\gametypes\tdm::updateScriptCvars();
     }
     else if(gametype == "bel")
@@ -284,8 +286,10 @@ Callback_StartGameType(gametype)
     }
 }
 
-Callback_PlayerConnect(gametype)
+Callback_PlayerConnect()
 {
+    gametype = getcvar("g_gametype");
+
     self.statusicon = "gfx/hud/hud@status_connecting.tga";
     self waittill("begin");
     self.statusicon = "";
@@ -311,26 +315,7 @@ Callback_PlayerConnect(gametype)
     }
     if(game["state"] == "intermission")
     {
-        if(gametype == "sd")
-        {
-            maps\mp\gametypes\sd::spawnIntermission();
-        }
-        else if(gametype == "re")
-        {
-            maps\mp\gametypes\re::spawnIntermission();
-        }
-        else if(gametype == "dm")
-        {
-            maps\mp\gametypes\dm::spawnIntermission();
-        }
-        else if(gametype == "tdm")
-        {
-            maps\mp\gametypes\tdm::spawnIntermission();
-        }
-        else if(gametype == "bel")
-        {
-            maps\mp\gametypes\bel::spawnIntermission();
-        }
+        spawnIntermission();
         return;
     }
 
@@ -385,26 +370,7 @@ Callback_PlayerConnect(gametype)
         
         if(isdefined(self.pers["weapon"]))
         {
-            if(gametype == "sd")
-            {
-                maps\mp\gametypes\sd::spawnPlayer();
-            }
-            else if(gametype == "re")
-            {
-                maps\mp\gametypes\re::spawnPlayer();
-            }
-            else if(gametype == "dm")
-            {
-                maps\mp\gametypes\dm::spawnPlayer();
-            }
-            else if(gametype == "tdm")
-            {
-                maps\mp\gametypes\tdm::spawnPlayer();
-            }
-            else if(gametype == "bel")
-            {
-                maps\mp\gametypes\bel::spawnPlayer();
-            }
+            spawnPlayer();
         }
         else
         {
@@ -413,26 +379,7 @@ Callback_PlayerConnect(gametype)
                 self.sessionteam = "spectator";
             }
 
-            if(gametype == "sd")
-            {
-                maps\mp\gametypes\sd::spawnSpectator();
-            }
-            else if(gametype == "re")
-            {
-                maps\mp\gametypes\re::spawnSpectator();
-            }
-            else if(gametype == "dm")
-            {
-                maps\mp\gametypes\dm::spawnSpectator();
-            }
-            else if(gametype == "tdm")
-            {
-                maps\mp\gametypes\tdm::spawnSpectator();
-            }
-            else if(gametype == "bel")
-            {
-                maps\mp\gametypes\bel::spawnSpectator();
-            }
+            spawnSpectator();
 
             if(self.pers["team"] == "allies")
             {
@@ -469,26 +416,7 @@ Callback_PlayerConnect(gametype)
         self.pers["team"] = "spectator";
         self.sessionteam = "spectator";
 
-        if(gametype == "sd")
-        {
-            maps\mp\gametypes\sd::spawnSpectator();
-        }
-        else if(gametype == "re")
-        {
-            maps\mp\gametypes\re::spawnSpectator();
-        }
-        else if(gametype == "dm")
-        {
-            maps\mp\gametypes\dm::spawnSpectator();
-        }
-        else if(gametype == "tdm")
-        {
-            maps\mp\gametypes\tdm::spawnSpectator();
-        }
-        else if(gametype == "bel")
-        {
-            maps\mp\gametypes\bel::spawnSpectator();
-        }
+        spawnSpectator();
     }
 
     for(;;)
@@ -648,25 +576,9 @@ Callback_PlayerConnect(gametype)
                             if (isdefined (self.blackscreentimer))
                                 self.blackscreentimer destroy();
                         }
-                        if(gametype == "sd")
+                        spawnSpectator();
+                        if(gametype == "bel")
                         {
-                            maps\mp\gametypes\sd::spawnSpectator();
-                        }
-                        else if(gametype == "re")
-                        {
-                            maps\mp\gametypes\re::spawnSpectator();
-                        }
-                        else if(gametype == "dm")
-                        {
-                            maps\mp\gametypes\dm::spawnSpectator();
-                        }
-                        else if(gametype == "tdm")
-                        {
-                            maps\mp\gametypes\tdm::spawnSpectator();
-                        }
-                        else if(gametype == "bel")
-                        {
-                            self maps\mp\gametypes\bel::spawnSpectator();
                             maps\mp\gametypes\bel::CheckAllies_andMoveAxis_to_Allies();
                         }
                     }
@@ -757,7 +669,7 @@ Callback_PlayerConnect(gametype)
                         else
                         {
                             self.pers["weapon"] = weapon;
-                            maps\mp\gametypes\bel::spawnPlayer();
+                            spawnPlayer();
                         }
 
                     }
@@ -771,7 +683,7 @@ Callback_PlayerConnect(gametype)
                         else
                         {
                             self.pers["weapon"] = weapon;
-                            maps\mp\gametypes\bel::spawnPlayer();
+                            spawnPlayer();
                         }
                     }
                 }
@@ -790,7 +702,7 @@ Callback_PlayerConnect(gametype)
                             continue;
 
                         self.pers["weapon"] = weapon;
-                        maps\mp\gametypes\bel::spawnPlayer();
+                        spawnPlayer();
                     }
                 }
                 else
@@ -881,14 +793,7 @@ Callback_PlayerConnect(gametype)
             {
                 self.pers["weapon"] = weapon;
                 self.spawned = undefined;
-                if(gametype == "sd")
-                {
-                    maps\mp\gametypes\sd::spawnPlayer();
-                }
-                else if(gametype == "re")
-                {
-                    maps\mp\gametypes\re::spawnPlayer();
-                }
+                spawnPlayer();
                 self thread printJoinedTeam(self.pers["team"]);
                 if(gametype == "sd")
                 {
@@ -915,14 +820,7 @@ Callback_PlayerConnect(gametype)
                     if(!level.exist[self.pers["team"]])
                     {
                         self.spawned = undefined;
-                        if(gametype == "sd")
-                        {
-                            maps\mp\gametypes\sd::spawnPlayer();
-                        }
-                        else if(gametype == "re")
-                        {
-                            maps\mp\gametypes\re::spawnPlayer();
-                        }
+                        spawnPlayer();
                         self thread printJoinedTeam(self.pers["team"]);
                         if(gametype == "sd")
                         {
@@ -935,14 +833,7 @@ Callback_PlayerConnect(gametype)
                     }
                     else
                     {
-                        if(gametype == "sd")
-                        {
-                            maps\mp\gametypes\sd::spawnPlayer();
-                        }
-                        else if(gametype == "re")
-                        {
-                            maps\mp\gametypes\re::spawnPlayer();
-                        }
+                        spawnPlayer();
                         self thread printJoinedTeam(self.pers["team"]);
                     }
                 }
@@ -969,27 +860,13 @@ Callback_PlayerConnect(gametype)
                     if(!level.didexist[otherteam] && !level.roundended)
                     {
                         self.spawned = undefined;
-                        if(gametype == "sd")
-                        {
-                            maps\mp\gametypes\sd::spawnPlayer();
-                        }
-                        else if(gametype == "re")
-                        {
-                            maps\mp\gametypes\re::spawnPlayer();
-                        }
+                        spawnPlayer();
                         self thread printJoinedTeam(self.pers["team"]);
                     }
                     else if(!level.didexist[self.pers["team"]] && !level.roundended)
                     {
                         self.spawned = undefined;
-                        if(gametype == "sd")
-                        {
-                            maps\mp\gametypes\sd::spawnPlayer();
-                        }
-                        else if(gametype == "re")
-                        {
-                            maps\mp\gametypes\re::spawnPlayer();
-                        }
+                        spawnPlayer();
                         self thread printJoinedTeam(self.pers["team"]);
                         if(gametype == "sd")
                         {
@@ -1025,13 +902,9 @@ Callback_PlayerConnect(gametype)
                     if(!isdefined(self.pers["weapon"]))
                     {
                         self.pers["weapon"] = weapon;
-                        if(gametype == "dm")
+                        spawnPlayer();
+                        if(gametype == "tdm")
                         {
-                            maps\mp\gametypes\dm::spawnPlayer();
-                        }
-                        else if(gametype == "tdm")
-                        {
-                            maps\mp\gametypes\tdm::spawnPlayer();
                             self thread printJoinedTeam(self.pers["team"]);
                         }
                     }
@@ -1114,8 +987,10 @@ Callback_PlayerConnect(gametype)
     }
 }
 
-Callback_PlayerDisconnect(gametype)
+Callback_PlayerDisconnect()
 {
+    gametype = getcvar("g_gametype");
+
     iprintln(&"MPSCRIPT_DISCONNECTED", self);
 
     lpselfnum = self getEntityNumber();
@@ -1134,7 +1009,7 @@ Callback_PlayerDisconnect(gametype)
                         //if (self isonground())
                             self.hasobj[i] maps\mp\gametypes\re::drop_objective_on_disconnect_or_death(self);
                         //else
-                        //	self.hasobj[i] maps\mp\gametypes\re::drop_objective_on_disconnect_or_death(self, "trace");
+                        //	self.hasobj[i] drop_objective_on_disconnect_or_death(self, "trace");
                     }
                 }
             }
@@ -1165,8 +1040,10 @@ Callback_PlayerDisconnect(gametype)
     }
 }
 
-Callback_PlayerDamage(gametype, eInflictor, eAttacker, iDamage, iDFlags, sMeansOfDeath, sWeapon, vPoint, vDir, sHitLoc)
+Callback_PlayerDamage(eInflictor, eAttacker, iDamage, iDFlags, sMeansOfDeath, sWeapon, vPoint, vDir, sHitLoc)
 {
+    gametype = getcvar("g_gametype");
+
     if(gametype == "bel")
     {
         if ( (isdefined (eAttacker)) && (isPlayer(eAttacker)) && (isdefined (eAttacker.god)) && (eAttacker.god == true) )
@@ -1275,355 +1152,160 @@ Callback_PlayerDamage(gametype, eInflictor, eAttacker, iDamage, iDFlags, sMeansO
     }
 }
 
-Callback_PlayerKilled(gametype, eInflictor, attacker, iDamage, sMeansOfDeath, sWeapon, vDir, sHitLoc)
+Callback_PlayerKilled(eInflictor, attacker, iDamage, sMeansOfDeath, sWeapon, vDir, sHitLoc)
 {
-    switch(gametype)
+    gametype = getcvar("g_gametype");
+
+    self endon("spawned");
+    if(gametype == "bel")
     {
-        case "sd":
+        self notify ("Stop give points");
+        
+        self maps\mp\gametypes\bel::check_delete_objective();
+        
+        if ( (self.sessionteam == "spectator") || (self.god == true) )
+            return;
+    }
+    else
+    {
+        if(self.sessionteam == "spectator")
+            return;
+    }
+
+    // If the player was killed by a head shot, let players know it was a head shot kill
+    if(sHitLoc == "head" && sMeansOfDeath != "MOD_MELEE")
+        sMeansOfDeath = "MOD_HEAD_SHOT";
+
+    // send out an obituary message to all clients about the kill
+    obituary(self, attacker, sWeapon, sMeansOfDeath);
+    if(gametype == "re")
+    {
+        self notify ("death");
+
+        if (isdefined (self.objs_held))
         {
-            self endon("spawned");
-
-            if(self.sessionteam == "spectator")
-                return;
-
-            // If the player was killed by a head shot, let players know it was a head shot kill
-            if(sHitLoc == "head" && sMeansOfDeath != "MOD_MELEE")
-                sMeansOfDeath = "MOD_HEAD_SHOT";
-
-            // send out an obituary message to all clients about the kill
-            obituary(self, attacker, sWeapon, sMeansOfDeath);
-
-            self.sessionstate = "dead";
-            self.statusicon = "gfx/hud/hud@status_dead.tga";
-            self.headicon = "";
-            self.pers["deaths"]++;
-            self.deaths = self.pers["deaths"];
-
-            lpselfnum = self getEntityNumber();
-            lpselfname = self.name;
-            lpselfteam = self.pers["team"];
-            lpattackerteam = "";
-
-            attackerNum = -1;
-            level.playercam = attacker getEntityNumber();
-
-            if(isPlayer(attacker))
+            if (self.objs_held > 0)
             {
-                if(attacker == self) // killed himself
+                for (i=0;i<(level.numobjectives + 1);i++)
                 {
-                    doKillcam = false;
+                    if (isdefined (self.hasobj[i]))
+                    {
+                        //if (self isonground())
+                        //{
+                        //	println ("PLAYER KILLED ON THE GROUND");
+                            self.hasobj[i] thread maps\mp\gametypes\re::drop_objective_on_disconnect_or_death(self);
+                        //}
+                        //else
+                        //{
+                        //	println ("PLAYER KILLED NOT ON THE GROUND");
+                        //	self.hasobj[i] thread drop_objective_on_disconnect_or_death(self.origin, "trace");
+                        //}
+                    }
+                }
+            }
+        }
+    }
 
+    self.sessionstate = "dead";
+    self.statusicon = "gfx/hud/hud@status_dead.tga";
+    self.headicon = "";
+    if(gametype == "bel")
+    {
+        self.deaths++;
+    }
+    else
+    {
+        self.pers["deaths"]++;
+        if(gametype == "sd" || gametype == "re")
+        {
+            self.deaths = self.pers["deaths"];
+        }
+    }
+
+    if(gametype == "bel")
+    {
+        body = self cloneplayer();
+        self dropItem(self getcurrentweapon());
+        self maps\mp\gametypes\bel::updateDeathArray();
+    }
+
+    lpselfnum = self getEntityNumber();
+    lpselfname = self.name;
+    if(gametype == "dm")
+    {
+        lpselfteam = "";
+    }
+    else
+    {
+        lpselfteam = self.pers["team"];
+    }
+    lpattackerteam = "";
+
+    attackerNum = -1;
+    if(gametype == "sd" || gametype == "re")
+    {
+        level.playercam = attacker getEntityNumber();
+    }
+
+    if(isPlayer(attacker))
+    {
+        if(gametype == "bel")
+        {
+            lpattacknum = attacker getEntityNumber();
+            lpattackname = attacker.name;
+            lpattackerteam = attacker.pers["team"];
+            logPrint("K;" + lpselfnum + ";" + lpselfteam + ";" + lpselfname + ";" + lpattacknum + ";" + lpattackerteam + ";" + lpattackname + ";" + sWeapon + ";" + iDamage + ";" + sMeansOfDeath + ";" + sHitLoc + "\n");                
+        }
+
+        if(attacker == self) // killed himself
+        {
+            if(gametype == "bel")
+            {
+                if(isdefined(attacker.reflectdamage))
+                    clientAnnouncement(attacker, &"MPSCRIPT_FRIENDLY_FIRE_WILL_NOT"); 
+                
+                self.score--;
+                if (self.pers["team"] == "allies")
+                {
+                    if (maps\mp\gametypes\bel::Number_On_Team("axis") < 1)
+                        self thread maps\mp\gametypes\bel::respawn("auto");
+                    else
+                    {
+                        self maps\mp\gametypes\bel::move_to_axis();
+                        maps\mp\gametypes\bel::CheckAllies_andMoveAxis_to_Allies(undefined, self);
+                        self thread maps\mp\gametypes\bel::respawn();
+                    }
+                }
+                else
+                    self thread maps\mp\gametypes\bel::respawn();
+                return;
+            }
+            else
+            {
+                doKillcam = false;
+
+                if(gametype == "dm" || gametype == "tdm")
+                {
+                    attacker.score--;
+                }
+                else
+                {
                     attacker.pers["score"]--;
                     attacker.score = attacker.pers["score"];
-                    
-                    if(isdefined(attacker.reflectdamage))
-                        clientAnnouncement(attacker, &"MPSCRIPT_FRIENDLY_FIRE_WILL_NOT"); 
-                }
-                else
-                {
-                    attackerNum = attacker getEntityNumber();
-                    doKillcam = true;
-
-                    if(self.pers["team"] == attacker.pers["team"]) // killed by a friendly
-                    {
-                        attacker.pers["score"]--;
-                        attacker.score = attacker.pers["score"];
-                    }
-                    else
-                    {
-                        attacker.pers["score"]++;
-                        attacker.score = attacker.pers["score"];
-                    }
-                }
-                
-                lpattacknum = attacker getEntityNumber();
-                lpattackname = attacker.name;
-                lpattackerteam = attacker.pers["team"];
-            }
-            else // If you weren't killed by a player, you were in the wrong place at the wrong time
-            {
-                doKillcam = false;
-
-                self.pers["score"]--;
-                self.score = self.pers["score"];
-
-                lpattacknum = -1;
-                lpattackname = "";
-                lpattackerteam = "world";
-            }
-
-            logPrint("K;" + lpselfnum + ";" + lpselfteam + ";" + lpselfname + ";" + lpattacknum + ";" + lpattackerteam + ";" + lpattackname + ";" + sWeapon + ";" + iDamage + ";" + sMeansOfDeath + ";" + sHitLoc + "\n");
-
-            // Make the player drop his weapon
-            self dropItem(self getcurrentweapon());
-
-            self.pers["weapon1"] = undefined;
-            self.pers["weapon2"] = undefined;
-            self.pers["spawnweapon"] = undefined;
-
-            body = self cloneplayer();
-
-            maps\mp\gametypes\sd::updateTeamStatus();
-
-            // TODO: Add additional checks that allow killcam when the last player killed wouldn't end the round (bomb is planted)
-            if(!level.exist[self.pers["team"]]) // If the last player on a team was just killed, don't do killcam
-                doKillcam = false;
-
-            delay = 2;	// Delay the player becoming a spectator till after he's done dying
-            wait delay;	// ?? Also required for Callback_PlayerKilled to complete before killcam can execute
-
-            if(doKillcam && !level.roundended)
-                self thread maps\mp\gametypes\sd::killcam(attackerNum, delay);
-            else
-            {
-                currentorigin = self.origin;
-                currentangles = self.angles;
-
-                self thread maps\mp\gametypes\sd::spawnSpectator(currentorigin + (0, 0, 60), currentangles);
-            }
-        }
-        break;
-
-        case "dm":
-        {
-            self endon("spawned");
-
-            if(self.sessionteam == "spectator")
-                return;
-
-            // If the player was killed by a head shot, let players know it was a head shot kill
-            if(sHitLoc == "head" && sMeansOfDeath != "MOD_MELEE")
-                sMeansOfDeath = "MOD_HEAD_SHOT";
-
-            // send out an obituary message to all clients about the kill
-            obituary(self, attacker, sWeapon, sMeansOfDeath);
-
-            self.sessionstate = "dead";
-            self.statusicon = "gfx/hud/hud@status_dead.tga";
-            self.deaths++;
-
-            lpselfnum = self getEntityNumber();
-            lpselfname = self.name;
-            lpselfteam = "";
-            lpattackerteam = "";
-
-            attackerNum = -1;
-            if(isPlayer(attacker))
-            {
-                if(attacker == self) // killed himself
-                {
-                    doKillcam = false;
-
-                    attacker.score--;
-                }
-                else
-                {
-                    attackerNum = attacker getEntityNumber();
-                    doKillcam = true;
-
-                    attacker.score++;
-                    attacker maps\mp\gametypes\dm::checkScoreLimit();
                 }
 
-                lpattacknum = attacker getEntityNumber();
-                lpattackname = attacker.name;
-            }
-            else // If you weren't killed by a player, you were in the wrong place at the wrong time
-            {
-                doKillcam = false;
-
-                self.score--;
-
-                lpattacknum = -1;
-                lpattackname = "";
-            }
-
-            logPrint("K;" + lpselfnum + ";" + lpselfteam + ";" + lpselfname + ";" + lpattacknum + ";" + lpattackerteam + ";" + lpattackname + ";" + sWeapon + ";" + iDamage + ";" + sMeansOfDeath + ";" + sHitLoc + "\n");
-
-            // Stop thread if map ended on this death
-            if(level.mapended)
-                return;
-                
-        //	self updateDeathArray();
-
-            // Make the player drop his weapon
-            self dropItem(self getcurrentweapon());
-
-            // Make the player drop health
-            self maps\mp\gametypes\dm::dropHealth();
-
-            body = self cloneplayer();
-
-            delay = 2;	// Delay the player becoming a spectator till after he's done dying
-            wait delay;	// ?? Also required for Callback_PlayerKilled to complete before respawn/killcam can execute
-            
-            if(getcvarint("scr_forcerespawn") > 0)
-                doKillcam = false;
-            
-            if(doKillcam)
-                self thread maps\mp\gametypes\dm::killcam(attackerNum, delay);
-            else
-                self thread maps\mp\gametypes\dm::respawn();
-        }
-        break;
-
-        case "tdm":
-        {
-            self endon("spawned");
-    
-            if(self.sessionteam == "spectator")
-                return;
-
-            // If the player was killed by a head shot, let players know it was a head shot kill
-            if(sHitLoc == "head" && sMeansOfDeath != "MOD_MELEE")
-                sMeansOfDeath = "MOD_HEAD_SHOT";
-                
-            // send out an obituary message to all clients about the kill
-            obituary(self, attacker, sWeapon, sMeansOfDeath);
-            
-            self.sessionstate = "dead";
-            self.statusicon = "gfx/hud/hud@status_dead.tga";
-            self.headicon = "";
-            self.deaths++;
-
-            lpselfnum = self getEntityNumber();
-            lpselfname = self.name;
-            lpselfteam = self.pers["team"];
-            lpattackerteam = "";
-
-            attackerNum = -1;
-            if(isPlayer(attacker))
-            {
-                if(attacker == self) // killed himself
-                {
-                    doKillcam = false;
-
-                    attacker.score--;
-                    
-                    if(isdefined(attacker.reflectdamage))
-                        clientAnnouncement(attacker, &"MPSCRIPT_FRIENDLY_FIRE_WILL_NOT"); 
-                }
-                else
-                {
-                    attackerNum = attacker getEntityNumber();
-                    doKillcam = true;
-
-                    if(self.pers["team"] == attacker.pers["team"]) // killed by a friendly
-                        attacker.score--;
-                    else
-                    {
-                        attacker.score++;
-
-                        teamscore = getTeamScore(attacker.pers["team"]);
-                        teamscore++;
-                        setTeamScore(attacker.pers["team"], teamscore);
-                    
-                        maps\mp\gametypes\tdm::checkScoreLimit();
-                    }
-                }
-
-                lpattacknum = attacker getEntityNumber();
-                lpattackname = attacker.name;
-                lpattackerteam = attacker.pers["team"];
-            }
-            else // If you weren't killed by a player, you were in the wrong place at the wrong time
-            {
-                doKillcam = false;
-                
-                self.score--;
-
-                lpattacknum = -1;
-                lpattackname = "";
-                lpattackerteam = "world";
-            }
-
-            logPrint("K;" + lpselfnum + ";" + lpselfteam + ";" + lpselfname + ";" + lpattacknum + ";" + lpattackerteam + ";" + lpattackname + ";" + sWeapon + ";" + iDamage + ";" + sMeansOfDeath + ";" + sHitLoc + "\n");
-
-            // Stop thread if map ended on this death
-            if(level.mapended)
-                return;
-
-            // Make the player drop his weapon
-            self dropItem(self getcurrentweapon());
-            
-            // Make the player drop health
-            self maps\mp\gametypes\tdm::dropHealth();
-
-            body = self cloneplayer();
-
-            delay = 2;	// Delay the player becoming a spectator till after he's done dying
-            wait delay;	// ?? Also required for Callback_PlayerKilled to complete before respawn/killcam can execute
-
-            if(getcvarint("scr_forcerespawn") > 0)
-                doKillcam = false;
-
-            if(doKillcam)
-                self thread maps\mp\gametypes\tdm::killcam(attackerNum, delay);
-            else
-                self thread maps\mp\gametypes\tdm::respawn();
-        }
-        break;
-
-        case "bel":
-        {
-            self endon("spawned");
-            self notify ("Stop give points");
-            
-            self maps\mp\gametypes\bel::check_delete_objective();
-            
-            if ( (self.sessionteam == "spectator") || (self.god == true) )
-                return;
-            
-            obituary(self, attacker, sWeapon, sMeansOfDeath);
-            
-            // If the player was killed by a head shot, let players know it was a head shot kill
-            if(sHitLoc == "head" && sMeansOfDeath != "MOD_MELEE")
-                sMeansOfDeath = "MOD_HEAD_SHOT";
-            
-            self.sessionstate = "dead";
-            self.statusicon = "gfx/hud/hud@status_dead.tga";
-            self.deaths++;
-            self.headicon = "";
-
-            body = self cloneplayer();
-            self dropItem(self getcurrentweapon());
-            self maps\mp\gametypes\bel::updateDeathArray();
-
-            lpselfnum = self getEntityNumber();
-            lpselfname = self.name;
-            lpselfteam = self.pers["team"];
-            lpattackerteam = "";
-            
-            attackerNum = -1;
-            if(isPlayer(attacker))
-            {
-                lpattacknum = attacker getEntityNumber();
-                lpattackname = attacker.name;
-                lpattackerteam = attacker.pers["team"];
-                logPrint("K;" + lpselfnum + ";" + lpselfteam + ";" + lpselfname + ";" + lpattacknum + ";" + lpattackerteam + ";" + lpattackname + ";" + sWeapon + ";" + iDamage + ";" + sMeansOfDeath + ";" + sHitLoc + "\n");
-                
-                if(attacker == self) // player killed himself
+                if(gametype == "sd" || gametype == "re" || gametype == "tdm")
                 {
                     if(isdefined(attacker.reflectdamage))
-                        clientAnnouncement(attacker, &"MPSCRIPT_FRIENDLY_FIRE_WILL_NOT"); 
-                    
-                    self.score--;
-                    if (self.pers["team"] == "allies")
-                    {
-                        if (maps\mp\gametypes\bel::Number_On_Team("axis") < 1)
-                            self thread maps\mp\gametypes\bel::respawn("auto");
-                        else
-                        {
-                            self maps\mp\gametypes\bel::move_to_axis();
-                            maps\mp\gametypes\bel::CheckAllies_andMoveAxis_to_Allies(undefined, self);
-                            self thread maps\mp\gametypes\bel::respawn();
-                        }
-                    }
-                    else
-                        self thread maps\mp\gametypes\bel::respawn();
-                    return;
+                        clientAnnouncement(attacker, &"MPSCRIPT_FRIENDLY_FIRE_WILL_NOT");
                 }
-                else if(self.pers["team"] == attacker.pers["team"]) // player was killed by a friendly
+            }
+        }
+        else
+        {
+            if(gametype == "bel")
+            {
+                if(self.pers["team"] == attacker.pers["team"]) // player was killed by a friendly
                 {
                     attacker.score--;
                     if (attacker.pers["team"] == "allies")
@@ -1642,7 +1324,7 @@ Callback_PlayerKilled(gametype, eInflictor, attacker, iDamage, sMeansOfDeath, sW
                         attacker.god = true;
                         iprintln (&"BEL_KILLED_ALLIED_SOLDIER",attacker);
                         
-                        self thread maps\mp\gametypes\bel::killcam (attackerNum, 2, "allies to axis");
+                        self thread killcam (attackerNum, 2, "allies to axis");
                         maps\mp\gametypes\bel::Set_Number_Allowed_Allies(maps\mp\gametypes\bel::Number_On_Team("axis"));
                         if (maps\mp\gametypes\bel::Number_On_Team("allies") < level.alliesallowed)
                             attacker maps\mp\gametypes\bel::move_to_allies(undefined, 2, "nodelay on respawn", 1);
@@ -1662,186 +1344,220 @@ Callback_PlayerKilled(gametype, eInflictor, attacker, iDamage, sMeansOfDeath, sW
                         if(level.mapended)
                             return;	
                     
-                        self thread maps\mp\gametypes\bel::killcam (attackerNum, 2, "axis to axis");
+                        self thread killcam (attackerNum, 2, "axis to axis");
                         return;
                     }
                 }
             }
-            else // Player wasn't killed by another player or themself (landmines, etc.)
+            else
             {
-                lpattacknum = -1;
-                lpattackname = "";
-                lpattackerteam = "world";
-                logPrint("K;" + lpselfnum + ";" + lpselfteam + ";" + lpselfname + ";" + lpattacknum + ";" + lpattackerteam + ";" + lpattackname + ";" + sWeapon + ";" + iDamage + ";" + sMeansOfDeath + ";" + sHitLoc + "\n");
-                
-                self.score--;
-                if (self.pers["team"] == "allies")
+                attackerNum = attacker getEntityNumber();
+                doKillcam = true;
+
+                if(gametype == "dm")
                 {
-                    if (maps\mp\gametypes\bel::Number_On_Team("axis") < 1)
-                        self thread maps\mp\gametypes\bel::respawn("auto");
-                    else
-                    {
-                        self maps\mp\gametypes\bel::move_to_axis();
-                        maps\mp\gametypes\bel::CheckAllies_andMoveAxis_to_Allies(undefined, self);
-                        self thread maps\mp\gametypes\bel::respawn();
-                    }
+                    attacker.score++;
+                    attacker maps\mp\gametypes\dm::checkScoreLimit();
                 }
                 else
-                    self thread maps\mp\gametypes\bel::respawn();
-            }
-        }
-        break;
-
-        case "re":
-        {
-            self endon("spawned");
-
-            if(self.sessionteam == "spectator")
-                return;
-
-            // If the player was killed by a head shot, let players know it was a head shot kill
-            if(sHitLoc == "head" && sMeansOfDeath != "MOD_MELEE")
-                sMeansOfDeath = "MOD_HEAD_SHOT";
-
-            // send out an obituary message to all clients about the kill
-            obituary(self, attacker, sWeapon, sMeansOfDeath);
-            self notify ("death");
-
-            if (isdefined (self.objs_held))
-            {
-                if (self.objs_held > 0)
                 {
-                    for (i=0;i<(level.numobjectives + 1);i++)
+                    if(self.pers["team"] == attacker.pers["team"]) // killed by a friendly
                     {
-                        if (isdefined (self.hasobj[i]))
+                        if(gametype == "tdm")
                         {
-                            //if (self isonground())
-                            //{
-                            //	println ("PLAYER KILLED ON THE GROUND");
-                                self.hasobj[i] thread maps\mp\gametypes\re::drop_objective_on_disconnect_or_death(self);
-                            //}
-                            //else
-                            //{
-                            //	println ("PLAYER KILLED NOT ON THE GROUND");
-                            //	self.hasobj[i] thread maps\mp\gametypes\re::drop_objective_on_disconnect_or_death(self.origin, "trace");
-                            //}
+                            attacker.score--;
+                        }
+                        else
+                        {
+                            attacker.pers["score"]--;
+                            attacker.score = attacker.pers["score"];
+                        }
+                    }
+                    else
+                    {
+                        if(gametype == "tdm")
+                        {
+                            attacker.score++;
+
+                            teamscore = getTeamScore(attacker.pers["team"]);
+                            teamscore++;
+                            setTeamScore(attacker.pers["team"], teamscore);
+                        
+                            maps\mp\gametypes\tdm::checkScoreLimit();
+                        }
+                        else
+                        {
+                            attacker.pers["score"]++;
+                            attacker.score = attacker.pers["score"];
                         }
                     }
                 }
             }
+        }
 
-            self.sessionstate = "dead";
-            self.statusicon = "gfx/hud/hud@status_dead.tga";
-            self.headicon = "";
-            self.pers["deaths"]++;
-            self.deaths = self.pers["deaths"];
-
-            lpselfnum = self getEntityNumber();
-            lpselfname = self.name;
-            lpselfteam = self.pers["team"];
-            lpattackerteam = "";
-
-            attackerNum = -1;
-            level.playercam = attacker getEntityNumber();
-
-            if(isPlayer(attacker))
+        lpattacknum = attacker getEntityNumber();
+        lpattackname = attacker.name;
+        if(gametype == "sd" || gametype == "re" || gametype == "tdm")
+        {
+            lpattackerteam = attacker.pers["team"];
+        }
+    }
+    else
+    {
+        if(gametype == "bel") // Player wasn't killed by another player or themself (landmines, etc.)
+        {
+            lpattacknum = -1;
+            lpattackname = "";
+            lpattackerteam = "world";
+            logPrint("K;" + lpselfnum + ";" + lpselfteam + ";" + lpselfname + ";" + lpattacknum + ";" + lpattackerteam + ";" + lpattackname + ";" + sWeapon + ";" + iDamage + ";" + sMeansOfDeath + ";" + sHitLoc + "\n");
+            
+            self.score--;
+            if (self.pers["team"] == "allies")
             {
-                if(attacker == self) // killed himself
-                {
-                    doKillcam = false;
-
-                    attacker.pers["score"]--;
-                    attacker.score = attacker.pers["score"];
-
-                    if(isdefined(attacker.reflectdamage))
-                        clientAnnouncement(attacker, &"MPSCRIPT_FRIENDLY_FIRE_WILL_NOT"); 
-                }
+                if (maps\mp\gametypes\bel::Number_On_Team("axis") < 1)
+                    self thread maps\mp\gametypes\bel::respawn("auto");
                 else
                 {
-                    attackerNum = attacker getEntityNumber();
-                    doKillcam = true;
-
-                    if(self.pers["team"] == attacker.pers["team"]) // killed by a friendly
-                    {
-                        attacker.pers["score"]--;
-                        attacker.score = attacker.pers["score"];
-                    }
-                    else
-                    {
-                        attacker.pers["score"]++;
-                        attacker.score = attacker.pers["score"];
-                    }
+                    self maps\mp\gametypes\bel::move_to_axis();
+                    maps\mp\gametypes\bel::CheckAllies_andMoveAxis_to_Allies(undefined, self);
+                    self thread maps\mp\gametypes\bel::respawn();
                 }
-
-                lpattacknum = attacker getEntityNumber();
-                lpattackname = attacker.name;
-                lpattackerteam = attacker.pers["team"];
             }
-            else // If you weren't killed by a player, you were in the wrong place at the wrong time
-            {
-                doKillcam = false;
-
-                self.pers["score"]--;
-                self.score = self.pers["score"];
-                
-                lpattacknum = -1;
-                lpattackname = "";
-                lpattackerteam = "world";
-            }
-
-            logPrint("K;" + lpselfnum + ";" + lpselfteam + ";" + lpselfname + ";" + lpattacknum + ";" + lpattackerteam + ";" + lpattackname + ";" + sWeapon + ";" + iDamage + ";" + sMeansOfDeath + ";" + sHitLoc + "\n");
-
-            // Make the player drop his weapon
-            self dropItem(self getcurrentweapon());
-
-            self.pers["weapon1"] = undefined;
-            self.pers["weapon2"] = undefined;
-            self.pers["spawnweapon"] = undefined;
-
-            //Remove HUD text if there is any
-            for (i=1;i<16;i++)
-            {
-                if ( (isdefined (self.hudelem)) && (isdefined (self.hudelem[i])) )
-                    self.hudelem[i] destroy();
-            }
-            if (isdefined (self.progressbackground))
-                self.progressbackground destroy();
-            if (isdefined (self.progressbar))
-                self.progressbar destroy();
+            else
+                self thread maps\mp\gametypes\bel::respawn();
             
-            body = self cloneplayer();
+            return;
+        }
+        else // If you weren't killed by a player, you were in the wrong place at the wrong time
+        {
+            doKillcam = false;
 
-            maps\mp\gametypes\re::updateTeamStatus();
-
-            // TODO: Add additional checks that allow killcam when the last player killed wouldn't end the round (bomb is planted)
-            if(!level.exist[self.pers["team"]]) // If the last player on a team was just killed, don't do killcam
-                doKillcam = false;
-
-            delay = 2;	// Delay the player becoming a spectator till after he's done dying
-            wait delay;	// ?? Also required for Callback_PlayerKilled to complete before killcam can execute
-
-            if(doKillcam && !level.roundended)
-                self thread maps\mp\gametypes\re::killcam(attackerNum, delay);
+            if(gametype == "dm" || gametype == "tdm")
+            {
+                self.score--;
+            }
             else
             {
-                currentorigin = self.origin;
-                currentangles = self.angles;
+                self.pers["score"]--;
+                self.score = self.pers["score"];
+            }
 
-                self thread maps\mp\gametypes\re::spawnSpectator(currentorigin + (0, 0, 60), currentangles);
+            lpattacknum = -1;
+            lpattackname = "";
+            if(gametype == "sd" || gametype == "re" || gametype == "tdm")
+            {
+                lpattackerteam = "world";
             }
         }
-        break;
+    }
 
-        default:
+    logPrint("K;" + lpselfnum + ";" + lpselfteam + ";" + lpselfname + ";" + lpattacknum + ";" + lpattackerteam + ";" + lpattackname + ";" + sWeapon + ";" + iDamage + ";" + sMeansOfDeath + ";" + sHitLoc + "\n");
+
+    if(gametype == "dm" || gametype == "tdm")
+    {
+        // Stop thread if map ended on this death
+        if(level.mapended)
+            return;
+        
+        if(gametype == "dm")
         {
-            printLn("##### centralizer: Callback_PlayerKilled: default");
+        //	self updateDeathArray();
         }
-        break;
+    }
+
+    // Make the player drop his weapon
+    self dropItem(self getcurrentweapon());
+
+    if(gametype == "sd" || gametype == "re")
+    {
+        self.pers["weapon1"] = undefined;
+        self.pers["weapon2"] = undefined;
+        self.pers["spawnweapon"] = undefined;
+    }
+
+    if(gametype == "re")
+    {
+        //Remove HUD text if there is any
+        for (i=1;i<16;i++)
+        {
+            if ( (isdefined (self.hudelem)) && (isdefined (self.hudelem[i])) )
+                self.hudelem[i] destroy();
+        }
+        if (isdefined (self.progressbackground))
+            self.progressbackground destroy();
+        if (isdefined (self.progressbar))
+            self.progressbar destroy();
+    }
+
+    if(gametype == "dm")
+    {
+        // Make the player drop health
+        self maps\mp\gametypes\dm::dropHealth();            
+    }
+    else if(gametype == "tdm")
+    {
+        // Make the player drop health
+        self maps\mp\gametypes\tdm::dropHealth();
+    }
+
+    body = self cloneplayer();
+
+    if(gametype == "sd")
+    {
+        maps\mp\gametypes\sd::updateTeamStatus();
+    }
+    else if(gametype == "re")
+    {
+        maps\mp\gametypes\re::updateTeamStatus();
+    }
+
+    if(gametype == "sd" || gametype == "re")
+    {
+        // TODO: Add additional checks that allow killcam when the last player killed wouldn't end the round (bomb is planted)
+        if(!level.exist[self.pers["team"]]) // If the last player on a team was just killed, don't do killcam
+            doKillcam = false;
+    }
+
+    delay = 2;	// Delay the player becoming a spectator till after he's done dying
+    wait delay;	// ?? Also required for Callback_PlayerKilled to complete before killcam can execute
+
+    if(gametype == "dm" || gametype == "tdm")
+    {
+        if(getcvarint("scr_forcerespawn") > 0)
+            doKillcam = false;
+    }
+
+    if((((gametype == "dm" || gametype == "tdm") && doKillcam)) || ((gametype == "sd" || gametype == "re") && doKillcam && !level.roundended))
+    {
+        self thread killcam(attackerNum, delay);
+    }
+    else
+    {
+        if(gametype == "dm")
+        {
+            self thread maps\mp\gametypes\dm::respawn();
+        }
+        else if(gametype == "tdm")
+        {
+            self thread maps\mp\gametypes\tdm::respawn();
+        }
+        else
+        {
+            currentorigin = self.origin;
+            currentangles = self.angles;
+
+            if(gametype == "sd" || gametype == "re")
+            {
+                self thread spawnSpectator(currentorigin + (0, 0, 60), currentangles);
+            }
+        }
     }
 }
 
-spawnPlayer(gametype)
+spawnPlayer()
 {
+    gametype = getcvar("g_gametype");
+
     switch(gametype)
     {
         case "sd":
@@ -2271,8 +1987,10 @@ spawnPlayer(gametype)
     }
 }
 
-spawnSpectator(gametype, origin, angles)
+spawnSpectator(origin, angles)
 {
+    gametype = getcvar("g_gametype");
+
     switch(gametype)
     {
         case "sd":
@@ -2459,8 +2177,10 @@ spawnSpectator(gametype, origin, angles)
     }
 }
 
-spawnIntermission(gametype)
+spawnIntermission()
 {
+    gametype = getcvar("g_gametype");
+
     switch(gametype)
     {
         case "sd":
@@ -2599,8 +2319,10 @@ spawnIntermission(gametype)
     }
 }
 
-killcam(gametype, attackerNum, delay, option)
+killcam(attackerNum, delay, option)
 {
+    gametype = getcvar("g_gametype");
+
     switch(gametype)
     {
         case "sd":
@@ -3166,18 +2888,20 @@ spawnedKillcamCleanup()
     self removeKillcamElements();
 }
 
-roundcam(gametype, delay, winningteam)
+roundcam(delay, winningteam)
 {
+    gametype = getcvar("g_gametype");
+
     switch(gametype)
     {
         case "sd":
         {
             self endon("spawned");
     
-            maps\mp\gametypes\sd::spawnSpectator();
+            spawnSpectator();
 
             if(isdefined(level.bombcam))
-                self thread maps\mp\gametypes\sd::spawnSpectator(level.bombcam.origin, level.bombcam.angles);
+                self thread spawnSpectator(level.bombcam.origin, level.bombcam.angles);
             else
                 self.spectatorclient = level.playercam;
                 
@@ -3266,10 +2990,10 @@ roundcam(gametype, delay, winningteam)
         {
             self endon("spawned");
 
-            maps\mp\gametypes\re::spawnSpectator();
+            spawnSpectator();
 
             if(isdefined(level.goalcam))
-                self thread maps\mp\gametypes\re::spawnSpectator(level.goalcam.origin, level.goalcam.angles);
+                self thread spawnSpectator(level.goalcam.origin, level.goalcam.angles);
             else
                 self.spectatorclient = level.playercam;
 
@@ -3362,8 +3086,10 @@ roundcam(gametype, delay, winningteam)
     }
 }
 
-endMap(gametype)
+endMap()
 {
+    gametype = getcvar("g_gametype");
+
     switch(gametype)
     {
         case "sd":
@@ -3386,7 +3112,7 @@ endMap(gametype)
                 player closeMenu();
                 player setClientCvar("g_scriptMainMenu", "main");
                 player setClientCvar("cg_objectiveText", text);
-                player maps\mp\gametypes\sd::spawnIntermission();
+                player spawnIntermission();
             }
 
             wait 10;
@@ -3439,7 +3165,7 @@ endMap(gametype)
                 else if(isdefined(playername))
                     player setClientCvar("cg_objectiveText", &"MPSCRIPT_WINS", playername);
                 
-                player maps\mp\gametypes\dm::spawnIntermission();
+                player spawnIntermission();
             }
             if (isdefined (name))
                 logPrint("W;;" + name + "\n");
@@ -3494,7 +3220,7 @@ endMap(gametype)
                 player closeMenu();
                 player setClientCvar("g_scriptMainMenu", "main");
                 player setClientCvar("cg_objectiveText", text);
-                player maps\mp\gametypes\tdm::spawnIntermission();
+                player spawnIntermission();
             }
             
             if ( (winningteam == "allies") || (winningteam == "axis") )
@@ -3554,7 +3280,7 @@ endMap(gametype)
                 else if(isdefined(playername))
                     player setClientCvar("cg_objectiveText", &"MPSCRIPT_WINS", playername);
                 
-                player maps\mp\gametypes\bel::spawnIntermission();
+                player spawnIntermission();
             }
             if (isdefined (name))
                 logPrint("W;;" + name + "\n");
@@ -3583,7 +3309,7 @@ endMap(gametype)
                 player closeMenu();
                 player setClientCvar("g_scriptMainMenu", "main");
                 player setClientCvar("cg_objectiveText", text);
-                player maps\mp\gametypes\re::spawnIntermission();
+                player spawnIntermission();
             }
 
             wait 10;
