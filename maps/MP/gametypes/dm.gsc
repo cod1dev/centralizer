@@ -120,27 +120,27 @@ main()
 
 Callback_StartGameType()
 {
-	centralizer::Callback_StartGameType();
+	centralizer::startGameType();
 }
 
 Callback_PlayerConnect()
 {
-	centralizer::Callback_PlayerConnect();
+	centralizer::playerConnect();
 }
 
 Callback_PlayerDisconnect()
 {
-	centralizer::Callback_PlayerDisconnect();
+	centralizer::playerDisconnect();
 }
 
 Callback_PlayerDamage(eInflictor, eAttacker, iDamage, iDFlags, sMeansOfDeath, sWeapon, vPoint, vDir, sHitLoc)
 {
-	centralizer::Callback_PlayerDamage(eInflictor, eAttacker, iDamage, iDFlags, sMeansOfDeath, sWeapon, vPoint, vDir, sHitLoc);
+	centralizer::playerDamage(eInflictor, eAttacker, iDamage, iDFlags, sMeansOfDeath, sWeapon, vPoint, vDir, sHitLoc);
 }
 
 Callback_PlayerKilled(eInflictor, attacker, iDamage, sMeansOfDeath, sWeapon, vDir, sHitLoc)
 {
-	centralizer::Callback_PlayerKilled(eInflictor, attacker, iDamage, sMeansOfDeath, sWeapon, vDir, sHitLoc);
+	centralizer::playerKilled(eInflictor, attacker, iDamage, sMeansOfDeath, sWeapon, vDir, sHitLoc);
 }
 
 updateDeathArray()

@@ -1,4 +1,4 @@
-Callback_StartGameType()
+startGameType()
 {
     gametype = getcvar("g_gametype");
 
@@ -286,7 +286,7 @@ Callback_StartGameType()
     }
 }
 
-Callback_PlayerConnect()
+playerConnect()
 {
     gametype = getcvar("g_gametype");
 
@@ -987,7 +987,7 @@ Callback_PlayerConnect()
     }
 }
 
-Callback_PlayerDisconnect()
+playerDisconnect()
 {
     gametype = getcvar("g_gametype");
 
@@ -1040,7 +1040,7 @@ Callback_PlayerDisconnect()
     }
 }
 
-Callback_PlayerDamage(eInflictor, eAttacker, iDamage, iDFlags, sMeansOfDeath, sWeapon, vPoint, vDir, sHitLoc)
+playerDamage(eInflictor, eAttacker, iDamage, iDFlags, sMeansOfDeath, sWeapon, vPoint, vDir, sHitLoc)
 {
     gametype = getcvar("g_gametype");
 
@@ -1152,7 +1152,7 @@ Callback_PlayerDamage(eInflictor, eAttacker, iDamage, iDFlags, sMeansOfDeath, sW
     }
 }
 
-Callback_PlayerKilled(eInflictor, attacker, iDamage, sMeansOfDeath, sWeapon, vDir, sHitLoc)
+playerKilled(eInflictor, attacker, iDamage, sMeansOfDeath, sWeapon, vDir, sHitLoc)
 {
     gametype = getcvar("g_gametype");
 
@@ -1558,44 +1558,220 @@ spawnPlayer()
 {
     gametype = getcvar("g_gametype");
 
-    switch(gametype)
+    self notify("spawned");
+    if(gametype == "dm" || gametype == "tdm" || gametype == "bel")
     {
-        case "sd":
+        self notify("end_respawn");
+    }
+    if(gametype == "bel")
+    {
+        self notify("stop weapon timeout");
+        self notify ("do_timer_cleanup");
+    }
+
+    resettimeout();
+
+    if(gametype == "dm")
+    {
+    //	if(isdefined(self.shocked))
+    //	{
+    //		self stopShellshock();
+    //		self.shocked = undefined;
+    //	}
+    }
+
+    if(gametype == "bel")
+    {
+        self.respawnwait = false;
+    }
+    if(gametype == "dm")
+    {
+        self.sessionteam = "none";
+    }
+    else
+    {
+        self.sessionteam = self.pers["team"];
+    }
+    if(gametype == "bel")
+    {
+        self.lastteam = self.pers["team"];
+    }
+    if(gametype == "dm" || gametype == "tdm" || gametype == "bel")
+    {
+        self.sessionstate = "playing";
+    }
+    if(gametype != "bel")
+    {
+        self.spectatorclient = -1;
+        self.archivetime = 0;
+    }
+    if(gametype == "sd" || gametype == "re" || gametype == "tdm" || gametype == "bel")
+    {
+        self.reflectdamage = undefined;
+
+        if(gametype == "sd" || gametype == "re" || gametype == "bel")
         {
-            self notify("spawned");
-
-            resettimeout();
-
-            self.sessionteam = self.pers["team"];
-            self.spectatorclient = -1;
-            self.archivetime = 0;
-            self.reflectdamage = undefined;
-
-            if(isdefined(self.spawned))
-                return;
-
-            self.sessionstate = "playing";
+            if(gametype == "bel")
+            {
+                if (isdefined(self.spawnMsg))
+                    self.spawnMsg destroy();
+            }
+            else
+            {
+                if(isdefined(self.spawned))
+                    return;
                 
-            if(self.pers["team"] == "allies")
-                spawnpointname = "mp_searchanddestroy_spawn_allied";
-            else
-                spawnpointname = "mp_searchanddestroy_spawn_axis";
+                self.sessionstate = "playing";
+            }
 
+            if(gametype == "bel")
+            {
+                spawnpointname = "mp_teamdeathmatch_spawn";
+                spawnpoints = getentarray(spawnpointname, "classname");
+
+                spawnpoint = maps\mp\gametypes\_spawnlogic::getSpawnpoint_MiddleThird(spawnpoints);
+            }
+            else
+            {
+                if(self.pers["team"] == "allies")
+                {
+                    if(gametype == "sd")
+                    {
+                        spawnpointname = "mp_searchanddestroy_spawn_allied";
+                    }
+                    else if(gametype == "re")
+                    {
+                        spawnpointname = "mp_retrieval_spawn_allied";
+                    }
+                }
+                else
+                {
+                    if(gametype == "sd")
+                    {
+                        spawnpointname = "mp_searchanddestroy_spawn_axis";
+                    }
+                    else if(gametype == "re")
+                    {
+                        spawnpointname = "mp_retrieval_spawn_axis";
+                    }
+                }
+
+                spawnpoints = getentarray(spawnpointname, "classname");
+                spawnpoint = maps\mp\gametypes\_spawnlogic::getSpawnpoint_Random(spawnpoints);
+            }
+        }
+        else if(gametype == "tdm")
+        {
+            spawnpointname = "mp_teamdeathmatch_spawn";
             spawnpoints = getentarray(spawnpointname, "classname");
-            spawnpoint = maps\mp\gametypes\_spawnlogic::getSpawnpoint_Random(spawnpoints);
+            spawnpoint = maps\mp\gametypes\_spawnlogic::getSpawnpoint_NearTeam(spawnpoints);
+        }
+    }
+    else if(gametype == "dm")
+    {
+        spawnpointname = "mp_deathmatch_spawn";
+        spawnpoints = getentarray(spawnpointname, "classname");
+        spawnpoint = maps\mp\gametypes\_spawnlogic::getSpawnpoint_DM(spawnpoints);
+    }
+    
+    if(isdefined(spawnpoint))
+        self spawn(spawnpoint.origin, spawnpoint.angles);
+    else
+        maps\mp\_utility::error("NO " + spawnpointname + " SPAWNPOINTS IN MAP");
 
-            if(isdefined(spawnpoint))
-                self spawn(spawnpoint.origin, spawnpoint.angles);
+    if(gametype == "re")
+    {
+        //Set their intro text
+        /*REMOVED
+        if(self.pers["team"] == "allies")
+        {
+            if (isdefined (game["re_attackers_intro_text"]))
+                clientAnnouncement (self,game["re_attackers_intro_text"]);
+        }
+        else if(self.pers["team"] == "axis")
+        {
+            if (isdefined (game["re_defenders_intro_text"]))
+                clientAnnouncement (self,game["re_defenders_intro_text"]);
+        }
+        */
+    }
+
+    if(gametype == "sd" || gametype == "re")
+    {
+        self.spawned = true;
+    }
+    self.statusicon = "";
+    self.maxhealth = 100;
+    self.health = self.maxhealth;
+    if(gametype == "re")
+    {
+        self.objs_held = 0;
+    }
+    if(gametype == "bel")
+    {
+        self.pers["savedmodel"] = undefined;
+
+        maps\mp\gametypes\_teams::model();
+
+        maps\mp\gametypes\_teams::loadout();
+        
+        self setClientCvar("scr_showweapontab", "1");
+        self setClientCvar("g_scriptMainMenu", game["menu_weapon_all"]);
+
+        if (self.pers["team"] == "allies")
+        {
+            if (isdefined (self.pers["LastAlliedWeapon"]))
+                self.pers["weapon"] = self.pers["LastAlliedWeapon"];
             else
-                maps\mp\_utility::error("NO " + spawnpointname + " SPAWNPOINTS IN MAP");
-            
-            self.spawned = true;
-            self.statusicon = "";
-            self.maxhealth = 100;
-            self.health = self.maxhealth;
-            
-            maps\mp\gametypes\sd::updateTeamStatus();
-            
+            {
+                if (isdefined (self.pers["nextWeapon"]))
+                {
+                    self.pers["weapon"] = self.pers["nextWeapon"];
+                    self.pers["nextWeapon"] = undefined;
+                }
+            }
+        }
+        else if (self.pers["team"] == "axis")
+        {
+            if (isdefined (self.pers["LastAxisWeapon"]))
+                self.pers["weapon"] = self.pers["LastAxisWeapon"];
+            else
+            {
+                if (isdefined (self.pers["nextWeapon"]))
+                {
+                    self.pers["weapon"] = self.pers["nextWeapon"];
+                    self.pers["nextWeapon"] = undefined;
+                }
+            }
+        }
+
+        self giveWeapon(self.pers["weapon"]);
+        self giveMaxAmmo(self.pers["weapon"]);
+        self setSpawnWeapon(self.pers["weapon"]);
+
+        self.archivetime = 0;
+        
+        if(self.pers["team"] == "allies")
+        {
+            self thread maps\mp\gametypes\bel::make_obj_marker();
+            self setClientCvar("cg_objectiveText", &"BEL_OBJ_ALLIED");
+        }
+        else if(self.pers["team"] == "axis")
+            self setClientCvar("cg_objectiveText", &"BEL_OBJ_AXIS");
+    }
+    else
+    {
+        if(gametype == "sd")
+        {
+            maps\mp\gametypes\re::updateTeamStatus();
+        }
+        else if(gametype == "re")
+        {
+            maps\mp\gametypes\re::updateTeamStatus();
+        }
+
+        if(gametype == "sd" || gametype == "re")
+        {
             if(!isdefined(self.pers["score"]))
                 self.pers["score"] = 0;
             self.score = self.pers["score"];
@@ -1603,14 +1779,28 @@ spawnPlayer()
             if(!isdefined(self.pers["deaths"]))
                 self.pers["deaths"] = 0;
             self.deaths = self.pers["deaths"];
-            
-            if(!isdefined(self.pers["savedmodel"]))
-                maps\mp\gametypes\_teams::model();
-            else
-                maps\mp\_utility::loadModel(self.pers["savedmodel"]);
-            
-            maps\mp\gametypes\_teams::loadout();
+        }
 
+        if(!isdefined(self.pers["savedmodel"]))
+            maps\mp\gametypes\_teams::model();
+        else
+            maps\mp\_utility::loadModel(self.pers["savedmodel"]);
+        
+        maps\mp\gametypes\_teams::loadout();
+    }
+
+    if(gametype == "dm")
+    {
+        self giveWeapon(self.pers["weapon"]);
+        self giveMaxAmmo(self.pers["weapon"]);
+        self setSpawnWeapon(self.pers["weapon"]);
+        
+        self setClientCvar("cg_objectiveText", &"DM_KILL_OTHER_PLAYERS");
+    }
+    else
+    {
+        if(gametype == "sd" || gametype == "re")
+        {
             if(isdefined(self.pers["weapon1"]) && isdefined(self.pers["weapon2"]))
             {
                 self setWeaponSlotWeapon("primary", self.pers["weapon1"]);
@@ -1631,230 +1821,52 @@ spawnPlayer()
 
                 self setSpawnWeapon(self.pers["weapon"]);
             }
-            
+        }
+        else if(gametype == "tdm")
+        {
+            self giveWeapon(self.pers["weapon"]);
+            self giveMaxAmmo(self.pers["weapon"]);
+            self setSpawnWeapon(self.pers["weapon"]);
+        }
+
+        if(gametype == "sd")
+        {
             if(self.pers["team"] == game["attackers"])
                 self setClientCvar("cg_objectiveText", &"SD_OBJ_ATTACKERS");
             else if(self.pers["team"] == game["defenders"])
                 self setClientCvar("cg_objectiveText", &"SD_OBJ_DEFENDERS");
-                
-            if(level.drawfriend)
-            {
-                if(self.pers["team"] == "allies")
-                {
-                    self.headicon = game["headicon_allies"];
-                    self.headiconteam = "allies";
-                }
-                else
-                {
-                    self.headicon = game["headicon_axis"];
-                    self.headiconteam = "axis";
-                }
-            }
         }
-        break;
-
-        case "dm":
+        else if(gametype == "re")
         {
-            self notify("spawned");
-            self notify("end_respawn");
-
-            resettimeout();
-
-        //	if(isdefined(self.shocked))
-        //	{
-        //		self stopShellshock();
-        //		self.shocked = undefined;
-        //	}
-
-            self.sessionteam = "none";
-            self.sessionstate = "playing";
-            self.spectatorclient = -1;
-            self.archivetime = 0;
-                
-            spawnpointname = "mp_deathmatch_spawn";
-            spawnpoints = getentarray(spawnpointname, "classname");
-            spawnpoint = maps\mp\gametypes\_spawnlogic::getSpawnpoint_DM(spawnpoints);
-
-            if(isdefined(spawnpoint))
-                self spawn(spawnpoint.origin, spawnpoint.angles);
-            else
-                maps\mp\_utility::error("NO " + spawnpointname + " SPAWNPOINTS IN MAP");
-
-            self.statusicon = "";
-            self.maxhealth = 100;
-            self.health = self.maxhealth;
-
-            if(!isdefined(self.pers["savedmodel"]))
-                maps\mp\gametypes\_teams::model();
-            else
-                maps\mp\_utility::loadModel(self.pers["savedmodel"]);
-
-            maps\mp\gametypes\_teams::loadout();
-
-            self giveWeapon(self.pers["weapon"]);
-            self giveMaxAmmo(self.pers["weapon"]);
-            self setSpawnWeapon(self.pers["weapon"]);
-            
-            self setClientCvar("cg_objectiveText", &"DM_KILL_OTHER_PLAYERS");
+            if(self.pers["team"] == game["re_attackers"])
+                self setClientCvar("cg_objectiveText", game["re_attackers_obj_text"]);
+            else if(self.pers["team"] == game["re_defenders"])
+                self setClientCvar("cg_objectiveText", game["re_defenders_obj_text"]);
         }
-        break;
-
-        case "tdm":
+        else if(gametype == "tdm")
         {
-            self notify("spawned");
-            self notify("end_respawn");
-            
-            resettimeout();
-
-            self.sessionteam = self.pers["team"];
-            self.sessionstate = "playing";
-            self.spectatorclient = -1;
-            self.archivetime = 0;
-            self.reflectdamage = undefined;
-                
-            spawnpointname = "mp_teamdeathmatch_spawn";
-            spawnpoints = getentarray(spawnpointname, "classname");
-            spawnpoint = maps\mp\gametypes\_spawnlogic::getSpawnpoint_NearTeam(spawnpoints);
-
-            if(isdefined(spawnpoint))
-                self spawn(spawnpoint.origin, spawnpoint.angles);
-            else
-                maps\mp\_utility::error("NO " + spawnpointname + " SPAWNPOINTS IN MAP");
-
-            self.statusicon = "";
-            self.maxhealth = 100;
-            self.health = self.maxhealth;
-            
-            if(!isdefined(self.pers["savedmodel"]))
-                maps\mp\gametypes\_teams::model();
-            else
-                maps\mp\_utility::loadModel(self.pers["savedmodel"]);
-
-            maps\mp\gametypes\_teams::loadout();
-            
-            self giveWeapon(self.pers["weapon"]);
-            self giveMaxAmmo(self.pers["weapon"]);
-            self setSpawnWeapon(self.pers["weapon"]);
-            
             if(self.pers["team"] == "allies")
                 self setClientCvar("cg_objectiveText", &"TDM_KILL_AXIS_PLAYERS");
             else if(self.pers["team"] == "axis")
                 self setClientCvar("cg_objectiveText", &"TDM_KILL_ALLIED_PLAYERS");
-
-            if(level.drawfriend)
-            {
-                if(self.pers["team"] == "allies")
-                {
-                    self.headicon = game["headicon_allies"];
-                    self.headiconteam = "allies";
-                }
-                else
-                {
-                    self.headicon = game["headicon_axis"];
-                    self.headiconteam = "axis";
-                }
-            }
         }
-        break;
 
-        case "bel":
+        if(level.drawfriend)
         {
-            self notify("spawned");
-            self notify("end_respawn");
-            self notify("stop weapon timeout");
-            self notify ("do_timer_cleanup");
-            
-            resettimeout();
-
-            self.respawnwait = false;
-            self.sessionteam = self.pers["team"];
-            self.lastteam = self.pers["team"];
-            self.sessionstate = "playing";
-            self.reflectdamage = undefined;
-            
-            if (isdefined(self.spawnMsg))
-                self.spawnMsg destroy();
-
-            spawnpointname = "mp_teamdeathmatch_spawn";
-            spawnpoints = getentarray(spawnpointname, "classname");
-
-            spawnpoint = maps\mp\gametypes\_spawnlogic::getSpawnpoint_MiddleThird(spawnpoints);
-
-            if(isdefined(spawnpoint))
-                self spawn(spawnpoint.origin, spawnpoint.angles);
-            else
-                maps\mp\_utility::error("NO " + spawnpointname + " SPAWNPOINTS IN MAP");
-
-            self.statusicon = "";
-            self.maxhealth = 100;
-            self.health = self.maxhealth;
-            self.pers["savedmodel"] = undefined;
-            
-            maps\mp\gametypes\_teams::model();
-
-            maps\mp\gametypes\_teams::loadout();
-            
-            self setClientCvar("scr_showweapontab", "1");
-            self setClientCvar("g_scriptMainMenu", game["menu_weapon_all"]);
-            
-            if (self.pers["team"] == "allies")
-            {
-                if (isdefined (self.pers["LastAlliedWeapon"]))
-                    self.pers["weapon"] = self.pers["LastAlliedWeapon"];
-                else
-                {
-                    if (isdefined (self.pers["nextWeapon"]))
-                    {
-                        self.pers["weapon"] = self.pers["nextWeapon"];
-                        self.pers["nextWeapon"] = undefined;
-                    }
-                }
-            }
-            else if (self.pers["team"] == "axis")
-            {
-                if (isdefined (self.pers["LastAxisWeapon"]))
-                    self.pers["weapon"] = self.pers["LastAxisWeapon"];
-                else
-                {
-                    if (isdefined (self.pers["nextWeapon"]))
-                    {
-                        self.pers["weapon"] = self.pers["nextWeapon"];
-                        self.pers["nextWeapon"] = undefined;
-                    }
-                }
-            }
-
-            self giveWeapon(self.pers["weapon"]);
-            self giveMaxAmmo(self.pers["weapon"]);
-            self setSpawnWeapon(self.pers["weapon"]);
-            
-            self.archivetime = 0;
-            
             if(self.pers["team"] == "allies")
             {
-                self thread maps\mp\gametypes\bel::make_obj_marker();
-                self setClientCvar("cg_objectiveText", &"BEL_OBJ_ALLIED");
+                self.headicon = game["headicon_allies"];
+                self.headiconteam = "allies";
             }
-            else if(self.pers["team"] == "axis")
-                self setClientCvar("cg_objectiveText", &"BEL_OBJ_AXIS");
-
-            if (level.drawfriend == 1)
+            else
             {
-                if(self.pers["team"] == "allies")
-                {
-                    self.headicon = game["headicon_allies"];
-                    self.headiconteam = "allies";
-                }
-                else if(self.pers["team"] == "axis")
-                {
-                    self.headicon = game["headicon_axis"];
-                    self.headiconteam = "axis";
-                }
-                else
-                {
-                    self.headicon = "";
-                }
+                self.headicon = game["headicon_axis"];
+                self.headiconteam = "axis";
             }
+        }
+
+        if(gametype == "bel")
+        {
             self.god = false;
             wait 0.05;
             if (isdefined (self))
@@ -1869,121 +1881,6 @@ spawnPlayer()
                     self.blackscreentimer destroy();
             }
         }
-        break;
-
-        case "re":
-        {
-            self notify("spawned");
-
-            resettimeout();
-
-            self.sessionteam = self.pers["team"];
-            self.spectatorclient = -1;
-            self.archivetime = 0;
-            self.reflectdamage = undefined;
-                        
-            if(isdefined(self.spawned))
-                    return;
-
-            self.sessionstate = "playing";
-
-            if(self.pers["team"] == "allies")
-                spawnpointname = "mp_retrieval_spawn_allied";
-            else
-                spawnpointname = "mp_retrieval_spawn_axis";
-
-            spawnpoints = getentarray(spawnpointname, "classname");
-            spawnpoint = maps\mp\gametypes\_spawnlogic::getSpawnpoint_Random(spawnpoints);
-
-            if(isdefined(spawnpoint))
-                self spawn(spawnpoint.origin, spawnpoint.angles);
-            else
-                maps\mp\_utility::error("NO " + spawnpointname + " SPAWNPOINTS IN MAP");
-
-            //Set their intro text
-            /*REMOVED
-            if(self.pers["team"] == "allies")
-            {
-                if (isdefined (game["re_attackers_intro_text"]))
-                    clientAnnouncement (self,game["re_attackers_intro_text"]);
-            }
-            else if(self.pers["team"] == "axis")
-            {
-                if (isdefined (game["re_defenders_intro_text"]))
-                    clientAnnouncement (self,game["re_defenders_intro_text"]);
-            }
-            */
-
-            self.spawned = true;
-            self.statusicon = "";
-            self.maxhealth = 100;
-            self.health = self.maxhealth;
-            self.objs_held = 0;
-
-            maps\mp\gametypes\re::updateTeamStatus();
-
-            if(!isdefined(self.pers["score"]))
-                self.pers["score"] = 0;
-            self.score = self.pers["score"];
-
-            if(!isdefined(self.pers["deaths"]))
-                self.pers["deaths"] = 0;
-            self.deaths = self.pers["deaths"];
-
-            if(!isdefined(self.pers["savedmodel"]))
-            maps\mp\gametypes\_teams::model();
-            else
-                maps\mp\_utility::loadModel(self.pers["savedmodel"]);
-
-            maps\mp\gametypes\_teams::loadout();
-
-            if(isdefined(self.pers["weapon1"]) && isdefined(self.pers["weapon2"]))
-            {
-                self setWeaponSlotWeapon("primary", self.pers["weapon1"]);
-                self setWeaponSlotAmmo("primary", 999);
-                self setWeaponSlotClipAmmo("primary", 999);
-
-                self setWeaponSlotWeapon("primaryb", self.pers["weapon2"]);
-                self setWeaponSlotAmmo("primaryb", 999);
-                self setWeaponSlotClipAmmo("primaryb", 999);
-
-                self setSpawnWeapon(self.pers["spawnweapon"]);
-            }
-            else
-            {
-                self setWeaponSlotWeapon("primary", self.pers["weapon"]);
-                self setWeaponSlotAmmo("primary", 999);
-                self setWeaponSlotClipAmmo("primary", 999);
-
-                self setSpawnWeapon(self.pers["weapon"]);
-            }
-
-            if(self.pers["team"] == game["re_attackers"])
-                self setClientCvar("cg_objectiveText", game["re_attackers_obj_text"]);
-            else if(self.pers["team"] == game["re_defenders"])
-                self setClientCvar("cg_objectiveText", game["re_defenders_obj_text"]);
-
-            if(level.drawfriend)
-            {
-                if(self.pers["team"] == "allies")
-                {
-                    self.headicon = game["headicon_allies"];
-                    self.headiconteam = "allies";
-                }
-                else
-                {
-                    self.headicon = game["headicon_axis"];
-                    self.headiconteam = "axis";
-                }
-            }
-        }
-        break;
-
-        default:
-        {
-            printLn("##### centralizer: spawnPlayer: default");
-        }
-        break;
     }
 }
 
