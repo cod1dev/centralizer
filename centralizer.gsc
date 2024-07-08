@@ -562,6 +562,10 @@ Callback_PlayerConnect(gametype)
                                 else
                                     response = "axis";
                             }
+                            else if(numonteam["allies"] < numonteam["axis"])
+                                response = "allies";
+                            else
+                                response = "axis";
                         }
                         else if(gametype == "dm")
                         {
@@ -853,7 +857,7 @@ Callback_PlayerConnect(gametype)
 
             if(!isdefined(self.pers["team"]) || (self.pers["team"] != "allies" && self.pers["team"] != "axis"))
                 continue;
-
+                
             weapon = self maps\mp\gametypes\_teams::restrict(response);
 
             if(weapon == "restricted")
@@ -866,7 +870,6 @@ Callback_PlayerConnect(gametype)
             {
                 if(isdefined(self.pers["weapon"]) && self.pers["weapon"] == weapon && !isdefined(self.pers["weapon1"]))
                     continue;
-
             }
             else if(gametype == "dm" || gametype == "tdm")
             {
@@ -1164,400 +1167,111 @@ Callback_PlayerDisconnect(gametype)
 
 Callback_PlayerDamage(gametype, eInflictor, eAttacker, iDamage, iDFlags, sMeansOfDeath, sWeapon, vPoint, vDir, sHitLoc)
 {
-    switch(gametype)
+    if(gametype == "bel")
     {
-        case "sd":
+        if ( (isdefined (eAttacker)) && (isPlayer(eAttacker)) && (isdefined (eAttacker.god)) && (eAttacker.god == true) )
+            return;
+
+        if ( (self.sessionteam == "spectator") || (self.god == true) )
+            return;
+    }
+    else
+    {
+        if(self.sessionteam == "spectator")
+            return;
+    }
+    
+    // Don't do knockback if the damage direction was not specified
+    if(!isDefined(vDir))
+        iDFlags |= level.iDFLAGS_NO_KNOCKBACK;
+    
+    if(gametype == "dm")
+    {
+        // Make sure at least one point of damage is done
+        if(iDamage < 1)
+            iDamage = 1;
+    }
+
+    if(gametype == "sd" || gametype == "re" || gametype == "tdm" || gametype == "bel")
+    {
+        // check for completely getting out of the damage
+        if(!(iDFlags & level.iDFLAGS_NO_PROTECTION))
         {
-            if(self.sessionteam == "spectator")
-                return;
-
-            // Don't do knockback if the damage direction was not specified
-            if(!isDefined(vDir))
-                iDFlags |= level.iDFLAGS_NO_KNOCKBACK;
-
-            // check for completely getting out of the damage
-            if(!(iDFlags & level.iDFLAGS_NO_PROTECTION))
+            if(isPlayer(eAttacker) && (self != eAttacker) && (self.pers["team"] == eAttacker.pers["team"]))
             {
-                if(isPlayer(eAttacker) && (self != eAttacker) && (self.pers["team"] == eAttacker.pers["team"]))
-                {
-                    if(getCvarInt("scr_friendlyfire") <= 0)
-                        return;
+                if(getCvarInt("scr_friendlyfire") <= 0)
+                    return;
 
-                    if(getCvarInt("scr_friendlyfire") == 2)
-                        reflect = true;
-                }
-            }
-
-            // Apply the damage to the player
-            if(!isdefined(reflect))
-            {
-                // Make sure at least one point of damage is done
-                if(iDamage < 1)
-                    iDamage = 1;
-
-                self finishPlayerDamage(eInflictor, eAttacker, iDamage, iDFlags, sMeansOfDeath, sWeapon, vPoint, vDir, sHitLoc);
-            }
-            else
-            {
-                eAttacker.reflectdamage = true;
-
-                iDamage = iDamage * .5;
-
-                // Make sure at least one point of damage is done
-                if(iDamage < 1)
-                    iDamage = 1;
-
-                eAttacker finishPlayerDamage(eInflictor, eAttacker, iDamage, iDFlags, sMeansOfDeath, sWeapon, vPoint, vDir, sHitLoc);
-                eAttacker.reflectdamage = undefined;
-            }
-
-            // Do debug print if it's enabled
-            if(getCvarInt("g_debugDamage"))
-            {
-                println("client:" + self getEntityNumber() + " health:" + self.health +
-                    " damage:" + iDamage + " hitLoc:" + sHitLoc);
-            }
-
-            if(self.sessionstate != "dead")
-            {
-                lpselfnum = self getEntityNumber();
-                lpselfname = self.name;
-                lpselfteam = self.pers["team"];
-                lpattackerteam = "";
-
-                if(isPlayer(eAttacker))
-                {
-                    lpattacknum = eAttacker getEntityNumber();
-                    lpattackname = eAttacker.name;
-                    lpattackerteam = eAttacker.pers["team"];
-                }
-                else
-                {
-                    lpattacknum = -1;
-                    lpattackname = "";
-                    lpattackerteam = "world";
-                }
-
-                if(isdefined(reflect)) 
-                {  
-                    lpattacknum = lpselfnum;
-                    lpattackname = lpselfname;
-                    lpattackerteam = lpattackerteam;
-                }
-
-                logPrint("D;" + lpselfnum + ";" + lpselfteam + ";" + lpselfname + ";" + lpattacknum + ";" + lpattackerteam + ";" + lpattackname + ";" + sWeapon + ";" + iDamage + ";" + sMeansOfDeath + ";" + sHitLoc + "\n");
+                if(getCvarInt("scr_friendlyfire") == 2)
+                    reflect = true;
             }
         }
-        break;
 
-        case "dm":
+        // Apply the damage to the player
+        if(!isdefined(reflect))
         {
-            if(self.sessionteam == "spectator")
-                return;
+            // Make sure at least one point of damage is done
+            if(iDamage < 1)
+                iDamage = 1;
 
-            // Don't do knockback if the damage direction was not specified
-            if(!isDefined(vDir))
-                iDFlags |= level.iDFLAGS_NO_KNOCKBACK;
+            self finishPlayerDamage(eInflictor, eAttacker, iDamage, iDFlags, sMeansOfDeath, sWeapon, vPoint, vDir, sHitLoc);
+        }
+        else
+        {
+            eAttacker.reflectdamage = true;
+
+            iDamage = iDamage * .5;
 
             // Make sure at least one point of damage is done
             if(iDamage < 1)
                 iDamage = 1;
 
-            // Do debug print if it's enabled
-            if(getCvarInt("g_debugDamage"))
-            {
-                println("client:" + self getEntityNumber() + " health:" + self.health +
-                    " damage:" + iDamage + " hitLoc:" + sHitLoc);
-            }
-
-            // Apply the damage to the player
-            self finishPlayerDamage(eInflictor, eAttacker, iDamage, iDFlags, sMeansOfDeath, sWeapon, vPoint, vDir, sHitLoc);
-
-            if(self.sessionstate != "dead")
-            {
-                lpselfnum = self getEntityNumber();
-                lpselfname = self.name;
-                lpselfteam = self.pers["team"];
-                lpattackerteam = "";
-
-                if(isPlayer(eAttacker))
-                {
-                    lpattacknum = eAttacker getEntityNumber();
-                    lpattackname = eAttacker.name;
-                    lpattackerteam = eAttacker.pers["team"];
-                }
-                else
-                {
-                    lpattacknum = -1;
-                    lpattackname = "";
-                    lpattackerteam = "world";
-                }
-
-                logPrint("D;" + lpselfnum + ";" + lpselfteam + ";" + lpselfname + ";" + lpattacknum + ";" + lpattackerteam + ";" + lpattackname + ";" + sWeapon + ";" + iDamage + ";" + sMeansOfDeath + ";" + sHitLoc + "\n");
-            }
+            eAttacker finishPlayerDamage(eInflictor, eAttacker, iDamage, iDFlags, sMeansOfDeath, sWeapon, vPoint, vDir, sHitLoc);
+            eAttacker.reflectdamage = undefined;
         }
-        break;
+    }
 
-        case "tdm":
+    // Do debug print if it's enabled
+    if(getCvarInt("g_debugDamage"))
+    {
+        println("client:" + self getEntityNumber() + " health:" + self.health +
+            " damage:" + iDamage + " hitLoc:" + sHitLoc);
+    }
+
+    if(gametype == "dm")
+    {
+        // Apply the damage to the player
+        self finishPlayerDamage(eInflictor, eAttacker, iDamage, iDFlags, sMeansOfDeath, sWeapon, vPoint, vDir, sHitLoc);            
+    }
+
+    if(self.sessionstate != "dead")
+    {
+        lpselfnum = self getEntityNumber();
+        lpselfname = self.name;
+        lpselfteam = self.pers["team"];
+        lpattackerteam = "";
+
+        if(isPlayer(eAttacker))
         {
-            if(self.sessionteam == "spectator")
-                return;
-
-            // Don't do knockback if the damage direction was not specified
-            if(!isDefined(vDir))
-                iDFlags |= level.iDFLAGS_NO_KNOCKBACK;
-
-            // check for completely getting out of the damage
-            if(!(iDFlags & level.iDFLAGS_NO_PROTECTION))
-            {
-                if(isPlayer(eAttacker) && (self != eAttacker) && (self.pers["team"] == eAttacker.pers["team"]))
-                {
-                    if(getCvarInt("scr_friendlyfire") <= 0)
-                        return;
-
-                    if(getCvarInt("scr_friendlyfire") == 2)
-                        reflect = true;
-                }
-            }
-
-            // Apply the damage to the player
-            if(!isdefined(reflect))
-            {
-                // Make sure at least one point of damage is done
-                if(iDamage < 1)
-                    iDamage = 1;
-
-                self finishPlayerDamage(eInflictor, eAttacker, iDamage, iDFlags, sMeansOfDeath, sWeapon, vPoint, vDir, sHitLoc);
-            }
-            else
-            {
-                eAttacker.reflectdamage = true;
-                
-                iDamage = iDamage * .5;
-
-                // Make sure at least one point of damage is done
-                if(iDamage < 1)
-                    iDamage = 1;
-
-                eAttacker finishPlayerDamage(eInflictor, eAttacker, iDamage, iDFlags, sMeansOfDeath, sWeapon, vPoint, vDir, sHitLoc);
-                eAttacker.reflectdamage = undefined;
-            }
-
-            // Do debug print if it's enabled
-            if(getCvarInt("g_debugDamage"))
-            {
-                println("client:" + self getEntityNumber() + " health:" + self.health +
-                    " damage:" + iDamage + " hitLoc:" + sHitLoc);
-            }
-
-            if(self.sessionstate != "dead")
-            {
-                lpselfnum = self getEntityNumber();
-                lpselfname = self.name;
-                lpselfteam = self.pers["team"];
-                lpattackerteam = "";
-
-                if(isPlayer(eAttacker))
-                {
-                    lpattacknum = eAttacker getEntityNumber();
-                    lpattackname = eAttacker.name;
-                    lpattackerteam = eAttacker.pers["team"];
-                }
-                else
-                {
-                    lpattacknum = -1;
-                    lpattackname = "";
-                    lpattackerteam = "world";
-                }
-
-                if(isdefined(reflect)) 
-                {  
-                    lpattacknum = lpselfnum;
-                    lpattackname = lpselfname;
-                    lpattackerteam = lpattackerteam;
-                }
-
-                logPrint("D;" + lpselfnum + ";" + lpselfteam + ";" + lpselfname + ";" + lpattacknum + ";" + lpattackerteam + ";" + lpattackname + ";" + sWeapon + ";" + iDamage + ";" + sMeansOfDeath + ";" + sHitLoc + "\n");
-            }
+            lpattacknum = eAttacker getEntityNumber();
+            lpattackname = eAttacker.name;
+            lpattackerteam = eAttacker.pers["team"];
         }
-        break;
-
-        case "bel":
+        else
         {
-            if ( (isdefined (eAttacker)) && (isPlayer(eAttacker)) && (isdefined (eAttacker.god)) && (eAttacker.god == true) )
-                return;
-
-            if ( (self.sessionteam == "spectator") || (self.god == true) )
-                return;
-            
-            // Don't do knockback if the damage direction was not specified
-            if(!isDefined(vDir))
-                iDFlags |= level.iDFLAGS_NO_KNOCKBACK;
-
-            // check for completely getting out of the damage
-            if(!(iDFlags & level.iDFLAGS_NO_PROTECTION))
-            {
-                if(isPlayer(eAttacker) && (self != eAttacker) && (self.pers["team"] == eAttacker.pers["team"]))
-                {
-                    if(getCvarInt("scr_friendlyfire") <= 0)
-                        return;
-
-                    if(getCvarInt("scr_friendlyfire") == 2)
-                        reflect = true;
-                }
-            }
-
-            // Apply the damage to the player
-            if(!isdefined(reflect))
-            {
-                // Make sure at least one point of damage is done
-                if(iDamage < 1)
-                    iDamage = 1;
-
-                self finishPlayerDamage(eInflictor, eAttacker, iDamage, iDFlags, sMeansOfDeath, sWeapon, vPoint, vDir, sHitLoc);
-            }
-            else
-            {
-                eAttacker.reflectdamage = true;
-
-                iDamage = iDamage * .5;
-
-                // Make sure at least one point of damage is done
-                if(iDamage < 1)
-                    iDamage = 1;
-
-                eAttacker finishPlayerDamage(eInflictor, eAttacker, iDamage, iDFlags, sMeansOfDeath, sWeapon, vPoint, vDir, sHitLoc);
-                eAttacker.reflectdamage = undefined;
-            }
-
-            // Do debug print if it's enabled
-            if(getCvarInt("g_debugDamage"))
-            {
-                println("client:" + self getEntityNumber() + " health:" + self.health +
-                    " damage:" + iDamage + " hitLoc:" + sHitLoc);
-            }
-            
-            if(self.sessionstate != "dead")
-            {
-                lpselfnum = self getEntityNumber();
-                lpselfname = self.name;
-                lpselfteam = self.pers["team"];
-                lpattackerteam = "";
-
-                if(isPlayer(eAttacker))
-                {
-                    lpattacknum = eAttacker getEntityNumber();
-                    lpattackname = eAttacker.name;
-                    lpattackerteam = eAttacker.pers["team"];
-                }
-                else
-                {
-                    lpattacknum = -1;
-                    lpattackname = "";
-                    lpattackerteam = "world";
-                }
-
-                if(isdefined(reflect)) 
-                {  
-                    lpattacknum = lpselfnum;
-                    lpattackname = lpselfname;
-                    lpattackerteam = lpattackerteam;
-                }
-
-                logPrint("D;" + lpselfnum + ";" + lpselfteam + ";" + lpselfname + ";" + lpattacknum + ";" + lpattackerteam + ";" + lpattackname + ";" + sWeapon + ";" + iDamage + ";" + sMeansOfDeath + ";" + sHitLoc + "\n");
-            }
+            lpattacknum = -1;
+            lpattackname = "";
+            lpattackerteam = "world";
         }
-        break;
 
-        case "re":
-        {
-            if(self.sessionteam == "spectator")
-                return;
-
-            // Don't do knockback if the damage direction was not specified
-            if(!isDefined(vDir))
-                iDFlags |= level.iDFLAGS_NO_KNOCKBACK;
-
-            // check for completely getting out of the damage
-            if(!(iDFlags & level.iDFLAGS_NO_PROTECTION))
-            {
-                if(isPlayer(eAttacker) && (self != eAttacker) && (self.pers["team"] == eAttacker.pers["team"]))
-                {
-                    if(getCvarInt("scr_friendlyfire") <= 0)
-                        return;
-
-                    if(getCvarInt("scr_friendlyfire") == 2)
-                        reflect = true;
-                }
-            }
-
-            // Apply the damage to the player
-            if(!isdefined(reflect))
-            {
-                // Make sure at least one point of damage is done
-                if(iDamage < 1)
-                    iDamage = 1;
-
-                self finishPlayerDamage(eInflictor, eAttacker, iDamage, iDFlags, sMeansOfDeath, sWeapon, vPoint, vDir, sHitLoc);
-            }
-            else
-            {
-                eAttacker.reflectdamage = true;
-
-                iDamage = iDamage * .5;
-
-                // Make sure at least one point of damage is done
-                if(iDamage < 1)
-                    iDamage = 1;
-
-                eAttacker finishPlayerDamage(eInflictor, eAttacker, iDamage, iDFlags, sMeansOfDeath, sWeapon, vPoint, vDir, sHitLoc);
-                eAttacker.reflectdamage = undefined;
-            }
-
-            // Do debug print if it's enabled
-            if(getCvarInt("g_debugDamage"))
-            {
-                println("client:" + self getEntityNumber() + " health:" + self.health +
-                    " damage:" + iDamage + " hitLoc:" + sHitLoc);
-            }
-
-            if(self.sessionstate != "dead")
-            {
-                lpselfnum = self getEntityNumber();
-                lpselfname = self.name;
-                lpselfteam = self.pers["team"];
-                lpattackerteam = "";
-
-                if(isPlayer(eAttacker))
-                {
-                    lpattacknum = eAttacker getEntityNumber();
-                    lpattackname = eAttacker.name;
-                    lpattackerteam = eAttacker.pers["team"];
-                }
-                else
-                {
-                    lpattacknum = -1;
-                    lpattackname = "";
-                    lpattackerteam = "world";
-                }
-
-                if(isdefined(reflect)) 
-                {  
-                    lpattacknum = lpselfnum;
-                    lpattackname = lpselfname;
-                    lpattackerteam = lpattackerteam;
-                }
-
-                logPrint("D;" + lpselfnum + ";" + lpselfteam + ";" + lpselfname + ";" + lpattacknum + ";" + lpattackerteam + ";" + lpattackname + ";" + sWeapon + ";" + iDamage + ";" + sMeansOfDeath + ";" + sHitLoc + "\n");
-            }
+        if(isdefined(reflect)) 
+        {  
+            lpattacknum = lpselfnum;
+            lpattackname = lpselfname;
+            lpattackerteam = lpattackerteam;
         }
-        break;
 
-        default:
-        {
-            printLn("##### centralizer: Callback_PlayerDamage: default");
-        }
-        break;
+        logPrint("D;" + lpselfnum + ";" + lpselfteam + ";" + lpselfname + ";" + lpattacknum + ";" + lpattackerteam + ";" + lpattackname + ";" + sWeapon + ";" + iDamage + ";" + sMeansOfDeath + ";" + sHitLoc + "\n");
     }
 }
 
