@@ -7,4 +7,4 @@
 Supported game version: **1.1**
 
 > [!NOTE]  
-> This centralizer aims to be used as a base to make it easier to add your own modifications & features to all your gametypes, without the need to modify each gametype files.
+> This centralizer aims to be used as a base to make it more convenient to add your modifications & features to all your gametypes, without the need to modify each gametype files.
