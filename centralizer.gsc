@@ -1994,142 +1994,73 @@ spawnSpectator(origin, angles)
 spawnIntermission()
 {
     gametype = getcvar("g_gametype");
-
-    switch(gametype)
-    {
-        case "sd":
-        {
-            self notify("spawned");
     
-            resettimeout();
+    self notify("spawned");
+    if(gametype == "dm" || gametype == "tdm" || gametype == "bel")
+    {
+        self notify("end_respawn");
+    }
 
-            self.sessionstate = "intermission";
-            self.spectatorclient = -1;
-            self.archivetime = 0;
-            self.reflectdamage = undefined;
+    resettimeout();
 
-            spawnpointname = "mp_searchanddestroy_intermission";
-            spawnpoints = getentarray(spawnpointname, "classname");
-            spawnpoint = maps\mp\gametypes\_spawnlogic::getSpawnpoint_Random(spawnpoints);
+    if(gametype == "dm")
+    {
+        //if(isdefined(self.shocked))
+        //{
+        //	self stopShellshock();
+        //	self.shocked = undefined;
+        //}
+    }
 
-            if(isdefined(spawnpoint))
-                self spawn(spawnpoint.origin, spawnpoint.angles);
-            else
-                maps\mp\_utility::error("NO " + spawnpointname + " SPAWNPOINTS IN MAP");
-        }
-        break;
+    self.sessionstate = "intermission";
+    self.spectatorclient = -1;
+    self.archivetime = 0;
+    if(gametype == "sd" || gametype == "re" || gametype == "tdm" || gametype == "bel")
+    {
+        self.reflectdamage = undefined;
+    }
 
-        case "dm":
-        {
-            self notify("spawned");
-            self notify("end_respawn");
-            
-            resettimeout();
+    if(gametype == "sd")
+    {
+        spawnpointname = "mp_searchanddestroy_intermission";
+    }
+    else if(gametype == "re")
+    {
+        spawnpointname = "mp_retrieval_intermission";
+    }
+    else if(gametype == "dm")
+    {
+        spawnpointname = "mp_deathmatch_intermission";
+    }
+    else if(gametype == "tdm" || gametype == "bel")
+    {
+        spawnpointname = "mp_teamdeathmatch_intermission";
+    }
+    spawnpoints = getentarray(spawnpointname, "classname");
+    if(gametype == "bel")
+    {
+        spawnpoint = maps\mp\gametypes\_spawnlogic::getSpawnpoint_MiddleThird(spawnpoints);
+    }
+    else
+    {
+        spawnpoint = maps\mp\gametypes\_spawnlogic::getSpawnpoint_Random(spawnpoints);
+    }
 
-        //	if(isdefined(self.shocked))
-        //	{
-        //		self stopShellshock();
-        //		self.shocked = undefined;
-        //	}
-
-            self.sessionstate = "intermission";
-            self.spectatorclient = -1;
-            self.archivetime = 0;
-
-            spawnpointname = "mp_deathmatch_intermission";
-            spawnpoints = getentarray(spawnpointname, "classname");
-            spawnpoint = maps\mp\gametypes\_spawnlogic::getSpawnpoint_Random(spawnpoints);
-
-            if(isdefined(spawnpoint))
-                self spawn(spawnpoint.origin, spawnpoint.angles);
-            else
-                maps\mp\_utility::error("NO " + spawnpointname + " SPAWNPOINTS IN MAP");
-        }
-        break;
-
-        case "tdm":
-        {
-            self notify("spawned");
-            self notify("end_respawn");
-
-            resettimeout();
-
-            self.sessionstate = "intermission";
-            self.spectatorclient = -1;
-            self.archivetime = 0;
-            self.reflectdamage = undefined;
-
-            spawnpointname = "mp_teamdeathmatch_intermission";
-            spawnpoints = getentarray(spawnpointname, "classname");
-            spawnpoint = maps\mp\gametypes\_spawnlogic::getSpawnpoint_Random(spawnpoints);
-            
-            if(isdefined(spawnpoint))
-                self spawn(spawnpoint.origin, spawnpoint.angles);
-            else
-                maps\mp\_utility::error("NO " + spawnpointname + " SPAWNPOINTS IN MAP");
-        }
-        break;
-
-        case "bel":
-        {
-            self notify("spawned");
-            self notify("end_respawn");
-
-            resettimeout();
-
-            self.sessionstate = "intermission";
-            self.spectatorclient = -1;
-            self.archivetime = 0;
-            self.reflectdamage = undefined;
-
-            spawnpointname = "mp_teamdeathmatch_intermission";
-            spawnpoints = getentarray(spawnpointname, "classname");
-
-            spawnpoint = maps\mp\gametypes\_spawnlogic::getSpawnpoint_MiddleThird(spawnpoints);
-
-            if(isdefined(spawnpoint))
-                self spawn(spawnpoint.origin, spawnpoint.angles);
-            else
-                maps\mp\_utility::error("NO " + spawnpointname + " SPAWNPOINTS IN MAP");
-            
-            if (isdefined (self.blackscreen))
-                self.blackscreen destroy();
-            if (isdefined (self.blackscreentext))
-                self.blackscreentext destroy();
-            if (isdefined (self.blackscreentext2))
-                self.blackscreentext2 destroy();
-            if (isdefined (self.blackscreentimer))
-                self.blackscreentimer destroy();
-        }
-        break;
-
-        case "re":
-        {
-            self notify("spawned");
-
-            resettimeout();
-
-            self.sessionstate = "intermission";
-            self.spectatorclient = -1;
-            self.archivetime = 0;
-            self.reflectdamage = undefined;
-
-            spawnpointname = "mp_retrieval_intermission";
-            spawnpoints = getentarray(spawnpointname, "classname");
-            spawnpoint = maps\mp\gametypes\_spawnlogic::getSpawnpoint_Random(spawnpoints);
-            
-            if(isdefined(spawnpoint))
-                self spawn(spawnpoint.origin, spawnpoint.angles);
-            else
-                maps\mp\_utility::error("NO " + spawnpointname + " SPAWNPOINTS IN MAP");
-        }
-        break;
-
-        default:
-        {
-            printLn("##### centralizer: spawnIntermission: default");
-        }
-        break;
+    if(isdefined(spawnpoint))
+        self spawn(spawnpoint.origin, spawnpoint.angles);
+    else
+        maps\mp\_utility::error("NO " + spawnpointname + " SPAWNPOINTS IN MAP");
+    
+    if(gametype == "bel")
+    {
+        if (isdefined (self.blackscreen))
+            self.blackscreen destroy();
+        if (isdefined (self.blackscreentext))
+            self.blackscreentext destroy();
+        if (isdefined (self.blackscreentext2))
+            self.blackscreentext2 destroy();
+        if (isdefined (self.blackscreentimer))
+            self.blackscreentimer destroy();            
     }
 }
 
