@@ -270,7 +270,7 @@ startGameType()
     else if(gametype == "dm")
     {
         thread maps\mp\gametypes\dm::startGame();
-    //	thread addBotClients(); // For development testing
+        //thread addBotClients(); // For development testing
         thread maps\mp\gametypes\dm::updateScriptCvars();
     }
     else if(gametype == "tdm")
@@ -1461,7 +1461,7 @@ playerKilled(eInflictor, attacker, iDamage, sMeansOfDeath, sWeapon, vDir, sHitLo
         
         if(gametype == "dm")
         {
-        //	self updateDeathArray();
+            //self updateDeathArray();
         }
     }
 
@@ -1573,11 +1573,11 @@ spawnPlayer()
 
     if(gametype == "dm")
     {
-    //	if(isdefined(self.shocked))
-    //	{
-    //		self stopShellshock();
-    //		self.shocked = undefined;
-    //	}
+        //if(isdefined(self.shocked))
+        //{
+        //	self stopShellshock();
+        //	self.shocked = undefined;
+        //}
     }
 
     if(gametype == "bel")
@@ -1888,189 +1888,106 @@ spawnSpectator(origin, angles)
 {
     gametype = getcvar("g_gametype");
 
-    switch(gametype)
+    self notify("spawned");
+    if(gametype == "dm" || gametype == "tdm" || gametype == "bel")
     {
-        case "sd":
+        self notify("end_respawn");
+    }
+
+    if(gametype == "bel")
+    {
+        self maps\mp\gametypes\bel::check_delete_objective();
+    }
+
+    resettimeout();
+
+    if(gametype == "dm")
+    {
+        //if(isdefined(self.shocked))
+        //{
+        //	self stopShellshock();
+        //	self.shocked = undefined;
+        //}
+    }
+
+    self.sessionstate = "spectator";
+    self.spectatorclient = -1;
+    self.archivetime = 0;
+    if(gametype == "sd" || gametype == "re" || gametype == "tdm" || gametype == "bel")
+    {
+        self.reflectdamage = undefined;
+    }
+    if(gametype == "bel")
+    {
+        self.pers["savedmodel"] = undefined;
+        self.headicon = "";            
+    }
+
+    if(gametype != "bel")
+    {
+        if(self.pers["team"] == "spectator")
+            self.statusicon = "";
+    }
+
+    if(isdefined(origin) && isdefined(angles))
+        self spawn(origin, angles);
+    else
+    {
+        if(gametype == "sd")
         {
-            self notify("spawned");
-
-            resettimeout();
-
-            self.sessionstate = "spectator";
-            self.spectatorclient = -1;
-            self.archivetime = 0;
-            self.reflectdamage = undefined;
-
-            if(self.pers["team"] == "spectator")
-                self.statusicon = "";
-
-            if(isdefined(origin) && isdefined(angles))
-                self spawn(origin, angles);
-            else
-            {
-                spawnpointname = "mp_searchanddestroy_intermission";
-                spawnpoints = getentarray(spawnpointname, "classname");
-                spawnpoint = maps\mp\gametypes\_spawnlogic::getSpawnpoint_Random(spawnpoints);
-
-                if(isdefined(spawnpoint))
-                    self spawn(spawnpoint.origin, spawnpoint.angles);
-                else
-                    maps\mp\_utility::error("NO " + spawnpointname + " SPAWNPOINTS IN MAP");
-            }
-
-            maps\mp\gametypes\sd::updateTeamStatus();
-
-            if(game["attackers"] == "allies")
-                self setClientCvar("cg_objectiveText", &"SD_OBJ_SPECTATOR_ALLIESATTACKING");
-            else if(game["attackers"] == "axis")
-                self setClientCvar("cg_objectiveText", &"SD_OBJ_SPECTATOR_AXISATTACKING");            
+            spawnpointname = "mp_searchanddestroy_intermission";
         }
-        break;
-
-        case "dm":
+        else if(gametype == "re")
         {
-            self notify("spawned");
-            self notify("end_respawn");
-            
-            resettimeout();
-
-        //	if(isdefined(self.shocked))
-        //	{
-        //		self stopShellshock();
-        //		self.shocked = undefined;
-        //	}
-
-            self.sessionstate = "spectator";
-            self.spectatorclient = -1;
-            self.archivetime = 0;
-
-            if(self.pers["team"] == "spectator")
-                self.statusicon = "";
-
-            if(isdefined(origin) && isdefined(angles))
-                self spawn(origin, angles);
-            else
-            {
-                spawnpointname = "mp_deathmatch_intermission";
-                spawnpoints = getentarray(spawnpointname, "classname");
-                spawnpoint = maps\mp\gametypes\_spawnlogic::getSpawnpoint_Random(spawnpoints);
-
-                if(isdefined(spawnpoint))
-                    self spawn(spawnpoint.origin, spawnpoint.angles);
-                else
-                    maps\mp\_utility::error("NO " + spawnpointname + " SPAWNPOINTS IN MAP");
-            }
-
-            self setClientCvar("cg_objectiveText", &"DM_KILL_OTHER_PLAYERS");
+            spawnpointname = "mp_retrieval_intermission";
         }
-        break;
-
-        case "tdm":
+        else if(gametype == "dm")
         {
-            self notify("spawned");
-            self notify("end_respawn");
-
-            resettimeout();
-
-            self.sessionstate = "spectator";
-            self.spectatorclient = -1;
-            self.archivetime = 0;
-            self.reflectdamage = undefined;
-
-            if(self.pers["team"] == "spectator")
-                self.statusicon = "";
-            
-            if(isdefined(origin) && isdefined(angles))
-                self spawn(origin, angles);
-            else
-            {
-                    spawnpointname = "mp_teamdeathmatch_intermission";
-                spawnpoints = getentarray(spawnpointname, "classname");
-                spawnpoint = maps\mp\gametypes\_spawnlogic::getSpawnpoint_Random(spawnpoints);
-            
-                if(isdefined(spawnpoint))
-                    self spawn(spawnpoint.origin, spawnpoint.angles);
-                else
-                    maps\mp\_utility::error("NO " + spawnpointname + " SPAWNPOINTS IN MAP");
-            }
-
-            self setClientCvar("cg_objectiveText", &"TDM_ALLIES_KILL_AXIS_PLAYERS");
+            spawnpointname = "mp_deathmatch_intermission";
         }
-        break;
-
-        case "bel":
+        else if(gametype == "tdm" || gametype == "bel")
         {
-            self notify("spawned");
-            self notify("end_respawn");
-            
-            self maps\mp\gametypes\bel::check_delete_objective();
-            
-            resettimeout();
-            
-            self.sessionstate = "spectator";
-            self.spectatorclient = -1;
-            self.archivetime = 0;
-            self.reflectdamage = undefined;
-            self.pers["savedmodel"] = undefined;
-            self.headicon = "";
-
             spawnpointname = "mp_teamdeathmatch_intermission";
-            spawnpoints = getentarray(spawnpointname, "classname");
-
-            spawnpoint = maps\mp\gametypes\_spawnlogic::getSpawnpoint_Random(spawnpoints);
-
-            if(isdefined(spawnpoint))
-                self spawn(spawnpoint.origin, spawnpoint.angles);
-            else
-                maps\mp\_utility::error("NO " + spawnpointname + " SPAWNPOINTS IN MAP");
-
-            self setClientCvar("cg_objectiveText", &"BEL_SPECTATOR_OBJS");
         }
-        break;
+        spawnpoints = getentarray(spawnpointname, "classname");
+        spawnpoint = maps\mp\gametypes\_spawnlogic::getSpawnpoint_Random(spawnpoints);
 
-        case "re":
-        {
-            self notify("spawned");
+        if(isdefined(spawnpoint))
+            self spawn(spawnpoint.origin, spawnpoint.angles);
+        else
+            maps\mp\_utility::error("NO " + spawnpointname + " SPAWNPOINTS IN MAP");
+    }
 
-            resettimeout();
+    if(gametype == "sd")
+    {
+        maps\mp\gametypes\sd::updateTeamStatus();
 
-            self.sessionstate = "spectator";
-            self.spectatorclient = -1;
-            self.archivetime = 0;
-            self.reflectdamage = undefined;
+        if(game["attackers"] == "allies")
+            self setClientCvar("cg_objectiveText", &"SD_OBJ_SPECTATOR_ALLIESATTACKING");
+        else if(game["attackers"] == "axis")
+            self setClientCvar("cg_objectiveText", &"SD_OBJ_SPECTATOR_AXISATTACKING");
+    }
+    else if(gametype == "re")
+    {
+        maps\mp\gametypes\re::updateTeamStatus();
 
-            if(self.pers["team"] == "spectator")
-                self.statusicon = "";
-
-            if(isdefined(origin) && isdefined(angles))
-                self spawn(origin, angles);
-            else
-            {
-                spawnpointname = "mp_retrieval_intermission";
-                spawnpoints = getentarray(spawnpointname, "classname");
-                spawnpoint = maps\mp\gametypes\_spawnlogic::getSpawnpoint_Random(spawnpoints);
-
-                if(isdefined(spawnpoint))
-                    self spawn(spawnpoint.origin, spawnpoint.angles);
-                else
-                    maps\mp\_utility::error("NO " + spawnpointname + " SPAWNPOINTS IN MAP");
-            }
-
-            maps\mp\gametypes\re::updateTeamStatus();
-
-            //if(game["re_attackers"] == "allies")
-            //	self setClientCvar("cg_objectiveText", &"RE_ALLIES", game["re_attackers_obj_text"]);
-            //else if(game["re_attackers"] == "axis")
-            //	self setClientCvar("cg_objectiveText", &"RE_AXIS", game["re_attackers_obj_text"]);
-            self setClientCvar("cg_objectiveText", game["re_spectator_obj_text"]);
-        }
-        break;
-
-        default:
-        {
-            printLn("##### centralizer: spawnSpectator: default");
-        }
-        break;
+        //if(game["re_attackers"] == "allies")
+        //	self setClientCvar("cg_objectiveText", &"RE_ALLIES", game["re_attackers_obj_text"]);
+        //else if(game["re_attackers"] == "axis")
+        //	self setClientCvar("cg_objectiveText", &"RE_AXIS", game["re_attackers_obj_text"]);
+        self setClientCvar("cg_objectiveText", game["re_spectator_obj_text"]);
+    }
+    else if(gametype == "dm")
+    {
+        self setClientCvar("cg_objectiveText", &"DM_KILL_OTHER_PLAYERS");
+    }
+    else if(gametype == "tdm")
+    {
+        self setClientCvar("cg_objectiveText", &"TDM_ALLIES_KILL_AXIS_PLAYERS");
+    }
+    else if(gametype == "bel")
+    {
+        self setClientCvar("cg_objectiveText", &"BEL_SPECTATOR_OBJS");
     }
 }
 
