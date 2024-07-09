@@ -2626,198 +2626,103 @@ roundcam(delay, winningteam)
 {
     gametype = getcvar("g_gametype");
 
-    switch(gametype)
+    self endon("spawned");
+
+    spawnSpectator();
+
+    if(gametype == "sd")
     {
-        case "sd":
-        {
-            self endon("spawned");
-    
-            spawnSpectator();
-
-            if(isdefined(level.bombcam))
-                self thread spawnSpectator(level.bombcam.origin, level.bombcam.angles);
-            else
-                self.spectatorclient = level.playercam;
-                
-            self.archivetime = delay + 7;
-
-            // wait till the next server frame to give the player the kill-cam huddraw elements
-            wait 0.05;
-
-            if (!isdefined(self.kc_topbar))
-            {
-                self.kc_topbar = newClientHudElem(self);
-                self.kc_topbar.archived = false;
-                self.kc_topbar.x = 0;
-                self.kc_topbar.y = 0;
-                self.kc_topbar.alpha = 0.5;
-                self.kc_topbar setShader("black", 640, 112);
-            }
-
-            if (!isdefined(self.kc_bottombar))
-            {
-                self.kc_bottombar = newClientHudElem(self);
-                self.kc_bottombar.archived = false;
-                self.kc_bottombar.x = 0;
-                self.kc_bottombar.y = 368;
-                self.kc_bottombar.alpha = 0.5;
-                self.kc_bottombar setShader("black", 640, 112);
-            }
-
-            if(!isdefined(self.kc_title))
-            {
-                self.kc_title = newClientHudElem(self);
-                self.kc_title.archived = false;
-                self.kc_title.x = 320;
-                self.kc_title.y = 40;
-                self.kc_title.alignX = "center";
-                self.kc_title.alignY = "middle";
-                self.kc_title.sort = 1; // force to draw after the bars
-                self.kc_title.fontScale = 3.5;
-            }
-
-            if(winningteam == "allies")
-                self.kc_title setText(&"MPSCRIPT_ALLIES_WIN");
-            else if(winningteam == "axis")
-                self.kc_title setText(&"MPSCRIPT_AXIS_WIN");
-            else
-                self.kc_title setText(&"MPSCRIPT_ROUNDCAM");
-
-            if(!isdefined(self.kc_skiptext))
-            {
-                self.kc_skiptext = newClientHudElem(self);
-                self.kc_skiptext.archived = false;
-                self.kc_skiptext.x = 320;
-                self.kc_skiptext.y = 70;
-                self.kc_skiptext.alignX = "center";
-                self.kc_skiptext.alignY = "middle";
-                self.kc_skiptext.sort = 1; // force to draw after the bars
-            }
-            self.kc_skiptext setText(&"MPSCRIPT_STARTING_NEW_ROUND");
-
-            if(!isdefined(self.kc_timer))
-            {
-                self.kc_timer = newClientHudElem(self);
-                self.kc_timer.archived = false;
-                self.kc_timer.x = 320;
-                self.kc_timer.y = 428;
-                self.kc_timer.alignX = "center";
-                self.kc_timer.alignY = "middle";
-                self.kc_timer.fontScale = 3.5;
-                self.kc_timer.sort = 1;
-            }
-            self.kc_timer setTimer(self.archivetime - 1.05);
-
-            self thread spawnedKillcamCleanup();
-            self thread waitSkipKillcamButton();
-            wait (self.archivetime - 0.05);
-            self removeKillcamElements();
-
-            self.spectatorclient = -1;
-            self.archivetime = 0;
-            
-            level notify("roundcam_ended");
-        }
-        break;
-
-        case "re":
-        {
-            self endon("spawned");
-
-            spawnSpectator();
-
-            if(isdefined(level.goalcam))
-                self thread spawnSpectator(level.goalcam.origin, level.goalcam.angles);
-            else
-                self.spectatorclient = level.playercam;
-
-            self.archivetime = delay + 7;
-
-            // wait till the next server frame to give the player the kill-cam huddraw elements
-            wait 0.05;
-            
-            if(!isdefined(self.kc_topbar))
-            {
-                self.kc_topbar = newClientHudElem(self);
-                self.kc_topbar.archived = false;
-                self.kc_topbar.x = 0;
-                self.kc_topbar.y = 0;
-                self.kc_topbar.alpha = 0.5;
-                self.kc_topbar setShader("black", 640, 112);
-            }
-            
-            if(!isdefined(self.kc_bottombar))
-            {
-                self.kc_bottombar = newClientHudElem(self);
-                self.kc_bottombar.archived = false;
-                self.kc_bottombar.x = 0;
-                self.kc_bottombar.y = 368;
-                self.kc_bottombar.alpha = 0.5;
-                self.kc_bottombar setShader("black", 640, 112);
-            }
-            
-            if(!isdefined(self.kc_title))
-            {
-                self.kc_title = newClientHudElem(self);
-                self.kc_title.archived = false;
-                self.kc_title.x = 320;
-                self.kc_title.y = 40;
-                self.kc_title.alignX = "center";
-                self.kc_title.alignY = "middle";
-                self.kc_title.sort = 1; // force to draw after the bars
-                self.kc_title.fontScale = 3.5;
-            }
-
-            if(winningteam == "allies")
-                self.kc_title setText(&"MPSCRIPT_ALLIES_WIN");
-            else if (winningteam == "axis")
-                self.kc_title setText(&"MPSCRIPT_AXIS_WIN");
-            else
-                self.kc_title setText(&"MPSCRIPT_ROUNDCAM");
-            
-            if(!isdefined(self.kc_skiptext))
-            {
-                self.kc_skiptext = newClientHudElem(self);
-                self.kc_skiptext.archived = false;
-                self.kc_skiptext.x = 320;
-                self.kc_skiptext.y = 70;
-                self.kc_skiptext.alignX = "center";
-                self.kc_skiptext.alignY = "middle";
-                self.kc_skiptext.sort = 1; // force to draw after the bars
-            }
-            self.kc_skiptext setText(&"MPSCRIPT_STARTING_NEW_ROUND");
-
-            if(!isdefined(self.kc_timer))
-            {
-                self.kc_timer = newClientHudElem(self);
-                self.kc_timer.archived = false;
-                self.kc_timer.x = 320;
-                self.kc_timer.y = 428;
-                self.kc_timer.alignX = "center";
-                self.kc_timer.alignY = "middle";
-                self.kc_timer.fontScale = 3.5;
-                self.kc_timer.sort = 1;
-            }
-            self.kc_timer setTimer(self.archivetime - 1.05);
-            
-            self thread spawnedKillcamCleanup();
-            self thread waitSkipKillcamButton();
-            wait (self.archivetime - 0.05);
-            self removeKillcamElements();
-            
-            self.spectatorclient = -1;
-            self.archivetime = 0;
-
-            level notify("roundcam_ended");
-        }
-        break;
-
-        default:
-        {
-            printLn("##### centralizer: roundcam: default");
-        }
-        break;
+        if(isdefined(level.bombcam))
+            self thread spawnSpectator(level.bombcam.origin, level.bombcam.angles);
+        else
+            self.spectatorclient = level.playercam;            
     }
+    else if(gametype == "re")
+    {
+        if(isdefined(level.goalcam))
+            self thread spawnSpectator(level.goalcam.origin, level.goalcam.angles);
+        else
+            self.spectatorclient = level.playercam;
+    }
+
+    self.archivetime = delay + 7;
+
+    // wait till the next server frame to give the player the kill-cam huddraw elements
+    wait 0.05;
+
+    if (!isdefined(self.kc_topbar))
+    {
+        self.kc_topbar = newClientHudElem(self);
+        self.kc_topbar.archived = false;
+        self.kc_topbar.x = 0;
+        self.kc_topbar.y = 0;
+        self.kc_topbar.alpha = 0.5;
+        self.kc_topbar setShader("black", 640, 112);
+    }
+
+    if (!isdefined(self.kc_bottombar))
+    {
+        self.kc_bottombar = newClientHudElem(self);
+        self.kc_bottombar.archived = false;
+        self.kc_bottombar.x = 0;
+        self.kc_bottombar.y = 368;
+        self.kc_bottombar.alpha = 0.5;
+        self.kc_bottombar setShader("black", 640, 112);
+    }
+
+    if(!isdefined(self.kc_title))
+    {
+        self.kc_title = newClientHudElem(self);
+        self.kc_title.archived = false;
+        self.kc_title.x = 320;
+        self.kc_title.y = 40;
+        self.kc_title.alignX = "center";
+        self.kc_title.alignY = "middle";
+        self.kc_title.sort = 1; // force to draw after the bars
+        self.kc_title.fontScale = 3.5;
+    }
+
+    if(winningteam == "allies")
+        self.kc_title setText(&"MPSCRIPT_ALLIES_WIN");
+    else if(winningteam == "axis")
+        self.kc_title setText(&"MPSCRIPT_AXIS_WIN");
+    else
+        self.kc_title setText(&"MPSCRIPT_ROUNDCAM");
+    
+    if(!isdefined(self.kc_skiptext))
+    {
+        self.kc_skiptext = newClientHudElem(self);
+        self.kc_skiptext.archived = false;
+        self.kc_skiptext.x = 320;
+        self.kc_skiptext.y = 70;
+        self.kc_skiptext.alignX = "center";
+        self.kc_skiptext.alignY = "middle";
+        self.kc_skiptext.sort = 1; // force to draw after the bars
+    }
+    self.kc_skiptext setText(&"MPSCRIPT_STARTING_NEW_ROUND");
+
+    if(!isdefined(self.kc_timer))
+    {
+        self.kc_timer = newClientHudElem(self);
+        self.kc_timer.archived = false;
+        self.kc_timer.x = 320;
+        self.kc_timer.y = 428;
+        self.kc_timer.alignX = "center";
+        self.kc_timer.alignY = "middle";
+        self.kc_timer.fontScale = 3.5;
+        self.kc_timer.sort = 1;
+    }
+    self.kc_timer setTimer(self.archivetime - 1.05);
+
+    self thread spawnedKillcamCleanup();
+    self thread waitSkipKillcamButton();
+    wait (self.archivetime - 0.05);
+    self removeKillcamElements();
+
+    self.spectatorclient = -1;
+    self.archivetime = 0;
+    
+    level notify("roundcam_ended");
 }
 
 endMap()
