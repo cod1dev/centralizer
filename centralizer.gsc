@@ -2725,6 +2725,205 @@ roundcam(delay, winningteam)
     level notify("roundcam_ended");
 }
 
+resetScores()
+{
+    players = getentarray("player", "classname");
+    for(i = 0; i < players.size; i++)
+    {
+        player = players[i];
+        player.pers["score"] = 0;
+        player.pers["deaths"] = 0;
+    }
+
+    game["alliedscore"] = 0;
+    setTeamScore("allies", game["alliedscore"]);
+    game["axisscore"] = 0;
+    setTeamScore("axis", game["axisscore"]);
+}
+
+endRound(roundwinner, timeexpired)
+{
+    gametype = getcvar("g_gametype");
+
+    if(level.roundended)
+        return;
+    level.roundended = true;
+
+    if(!isdefined(timeexpired))
+        timeexpired = false;
+    
+    winners = "";
+    losers = "";
+    
+    if(roundwinner == "allies")
+    {
+        game["alliedscore"]++;
+        setTeamScore("allies", game["alliedscore"]);
+        
+        players = getentarray("player", "classname");
+        for(i = 0; i < players.size; i++)
+        {
+            if ( (isdefined (players[i].pers["team"])) && (players[i].pers["team"] == "allies") )
+                winners = (winners + ";" + players[i].name);
+            else if ( (isdefined (players[i].pers["team"])) && (players[i].pers["team"] == "axis") )
+                losers = (losers + ";" + players[i].name);
+            players[i] playLocalSound("MP_announcer_allies_win");
+        }
+        logPrint("W;allies" + winners + "\n");
+        logPrint("L;axis" + losers + "\n");
+    }
+    else if(roundwinner == "axis")
+    {
+        game["axisscore"]++;
+        setTeamScore("axis", game["axisscore"]);
+
+        players = getentarray("player", "classname");
+        for(i = 0; i < players.size; i++)
+        {
+            if ( (isdefined (players[i].pers["team"])) && (players[i].pers["team"] == "axis") )
+                winners = (winners + ";" + players[i].name);
+            else if ( (isdefined (players[i].pers["team"])) && (players[i].pers["team"] == "allies") )
+                losers = (losers + ";" + players[i].name);
+            players[i] playLocalSound("MP_announcer_axis_win");
+        }
+        logPrint("W;axis" + winners + "\n");
+        logPrint("L;allies" + losers + "\n");
+    }
+    else if(roundwinner == "draw")
+    {
+        players = getentarray("player", "classname");
+        for(i = 0; i < players.size; i++)
+            players[i] playLocalSound("MP_announcer_round_draw");
+    }
+
+    if((getcvar("scr_roundcam") == "1") && (!timeexpired) && (game["matchstarted"]))
+    {
+        if(gametype == "sd" && ((isdefined(level.playercam) || isdefined(level.bombcam)) && roundwinner != "draw" && roundwinner != "reset")
+            || gametype == "re" && ((isdefined(level.playercam) || isdefined(level.goalcam)) && roundwinner != "draw" && roundwinner != "reset"))
+        {
+            delay = 2;	// Delay the player becoming a spectator
+            wait delay;
+
+            viewers = 0;
+            for(i = 0; i < players.size; i++)
+            {
+                player = players[i];
+
+                if(gametype == "sd")
+                {
+                    if((player.sessionstate != "playing") && (player getEntityNumber() != level.playercam) && !isdefined(player.killcam))
+                    {
+                        player thread roundcam(delay, roundwinner);
+                        viewers++;
+                    }
+                }
+                else if(gametype == "re")
+                {
+                    //if((player.sessionstate != "playing") && (player getEntityNumber() != level.playercam) && !isdefined(player.killcam))
+                    if(!isdefined(player.killcam))
+                    {
+                        player thread roundcam(delay,roundwinner);
+                        viewers++;
+                    }
+                }
+            }
+
+            if(viewers)
+                level waittill("roundcam_ended");
+            else
+                wait 7;
+        }
+        else
+        {
+            wait 5;
+        }
+    }
+    else
+    {
+        wait 5;
+    }
+
+    if(game["matchstarted"])
+    {
+        checkScoreLimit();
+        game["roundsplayed"]++;
+        checkRoundLimit();
+    }
+
+    if(!game["matchstarted"] && roundwinner == "reset")
+    {
+        game["matchstarted"] = true;
+        thread resetScores();
+        game["roundsplayed"] = 0;
+    }
+
+    if(level.mapended)
+        return;
+    level.mapended = true;
+
+    // for all living players store their weapons
+    players = getentarray("player", "classname");
+    for(i = 0; i < players.size; i++)
+    {
+        player = players[i];
+        
+        if(isdefined(player.pers["team"]) && player.pers["team"] != "spectator" && player.sessionstate == "playing")
+        {
+            primary = player getWeaponSlotWeapon("primary");
+            primaryb = player getWeaponSlotWeapon("primaryb");
+
+            // If a menu selection was made
+            if(isdefined(player.oldweapon))
+            {
+                // If a new weapon has since been picked up (this fails when a player picks up a weapon the same as his original)
+                if(player.oldweapon != primary && player.oldweapon != primaryb && primary != "none")
+                {
+                    player.pers["weapon1"] = primary;
+                    player.pers["weapon2"] = primaryb;
+                    player.pers["spawnweapon"] = player getCurrentWeapon();
+                } // If the player's menu chosen weapon is the same as what is in the primaryb slot, swap the slots
+                else if(player.pers["weapon"] == primaryb)
+                {
+                    player.pers["weapon1"] = primaryb;
+                    player.pers["weapon2"] = primary;
+                    player.pers["spawnweapon"] = player.pers["weapon1"];
+                } // Give them the weapon they chose from the menu
+                else
+                {
+                    player.pers["weapon1"] = player.pers["weapon"];
+                    player.pers["weapon2"] = primaryb;
+                    player.pers["spawnweapon"] = player.pers["weapon1"];
+                }
+            } // No menu choice was ever made, so keep their weapons and spawn them with what they're holding, unless it's a pistol or grenade
+            else
+            {
+                if(primary == "none")
+                    player.pers["weapon1"] = player.pers["weapon"];
+                else
+                    player.pers["weapon1"] = primary;
+                    
+                player.pers["weapon2"] = primaryb;
+
+                spawnweapon = player getCurrentWeapon();
+                if(!maps\mp\gametypes\_teams::isPistolOrGrenade(spawnweapon))
+                    player.pers["spawnweapon"] = spawnweapon;
+                else
+                    player.pers["spawnweapon"] = player.pers["weapon1"];
+            }
+        }
+    }
+
+    if(level.timelimit > 0)
+    {
+        timepassed = (getTime() - level.starttime) / 1000;
+        timepassed = timepassed / 60.0;
+
+        game["timeleft"] = level.timelimit - timepassed;
+    }
+
+    map_restart(true);
+}
+
 endMap()
 {
     gametype = getcvar("g_gametype");
@@ -2852,6 +3051,38 @@ endMap()
 
     wait 10;
     exitLevel(false);
+}
+
+checkScoreLimit()
+{
+    if(level.scorelimit <= 0)
+        return;
+    
+    if(game["alliedscore"] < level.scorelimit && game["axisscore"] < level.scorelimit)
+        return;
+
+    if(level.mapended)
+        return;
+    level.mapended = true;
+
+    iprintln(&"MPSCRIPT_SCORE_LIMIT_REACHED");
+    endMap();
+}
+
+checkRoundLimit()
+{
+    if(level.roundlimit <= 0)
+        return;
+    
+    if(game["roundsplayed"] < level.roundlimit)
+        return;
+    
+    if(level.mapended)
+        return;
+    level.mapended = true;
+
+    iprintln(&"MPSCRIPT_ROUND_LIMIT_REACHED");
+    endMap();
 }
 
 printJoinedTeam(team)
