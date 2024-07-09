@@ -1547,18 +1547,18 @@ playerKilled(eInflictor, attacker, iDamage, sMeansOfDeath, sWeapon, vDir, sHitLo
 
     self.sessionstate = "dead";
     self.statusicon = "gfx/hud/hud@status_dead.tga";
-    self.headicon = "";
-    if(gametype == "bel")
+    if(gametype != "dm")
     {
-        self.deaths++;
+        self.headicon = "";
+    }
+    if(gametype == "sd" || gametype == "re")
+    {
+        self.pers["deaths"]++;
+        self.deaths = self.pers["deaths"];
     }
     else
     {
-        self.pers["deaths"]++;
-        if(gametype == "sd" || gametype == "re")
-        {
-            self.deaths = self.pers["deaths"];
-        }
+        self.deaths++;        
     }
 
     if(gametype == "bel")
@@ -2407,414 +2407,56 @@ killcam(attackerNum, delay, option)
 {
     gametype = getcvar("g_gametype");
 
-    switch(gametype)
+    self endon("spawned");
+
+    if(gametype == "dm" || gametype == "tdm")
     {
-        case "sd":
-        {
-            self endon("spawned");
+        //previousorigin = self.origin;
+        //previousangles = self.angles;
+    }
+
+    // killcam
+    if(attackerNum < 0)
+        return;
     
-            // killcam
-            if(attackerNum < 0)
-                return;
-
-            self.sessionstate = "spectator";
-            self.spectatorclient = attackerNum;
-            self.archivetime = delay + 7;
-
-            // wait till the next server frame to allow code a chance to update archivetime if it needs trimming
-            wait 0.05;
-
-            if(self.archivetime <= delay)
-            {
-                self.spectatorclient = -1;
-                self.archivetime = 0;
-            
-                return;
-            }
-
-            self.killcam = true;
-
-            if(!isdefined(self.kc_topbar))
-            {
-                self.kc_topbar = newClientHudElem(self);
-                self.kc_topbar.archived = false;
-                self.kc_topbar.x = 0;
-                self.kc_topbar.y = 0;
-                self.kc_topbar.alpha = 0.5;
-                self.kc_topbar setShader("black", 640, 112);
-            }
-
-            if(!isdefined(self.kc_bottombar))
-            {
-                self.kc_bottombar = newClientHudElem(self);
-                self.kc_bottombar.archived = false;
-                self.kc_bottombar.x = 0;
-                self.kc_bottombar.y = 368;
-                self.kc_bottombar.alpha = 0.5;
-                self.kc_bottombar setShader("black", 640, 112);
-            }
-
-            if(!isdefined(self.kc_title))
-            {
-                self.kc_title = newClientHudElem(self);
-                self.kc_title.archived = false;
-                self.kc_title.x = 320;
-                self.kc_title.y = 40;
-                self.kc_title.alignX = "center";
-                self.kc_title.alignY = "middle";
-                self.kc_title.sort = 1; // force to draw after the bars
-                self.kc_title.fontScale = 3.5;
-            }
-            self.kc_title setText(&"MPSCRIPT_KILLCAM");
-
-            if(!isdefined(self.kc_skiptext))
-            {
-                self.kc_skiptext = newClientHudElem(self);
-                self.kc_skiptext.archived = false;
-                self.kc_skiptext.x = 320;
-                self.kc_skiptext.y = 70;
-                self.kc_skiptext.alignX = "center";
-                self.kc_skiptext.alignY = "middle";
-                self.kc_skiptext.sort = 1; // force to draw after the bars
-            }
-            self.kc_skiptext setText(&"MPSCRIPT_PRESS_ACTIVATE_TO_SKIP");
-
-            if(!isdefined(self.kc_timer))
-            {
-                self.kc_timer = newClientHudElem(self);
-                self.kc_timer.archived = false;
-                self.kc_timer.x = 320;
-                self.kc_timer.y = 428;
-                self.kc_timer.alignX = "center";
-                self.kc_timer.alignY = "middle";
-                self.kc_timer.fontScale = 3.5;
-                self.kc_timer.sort = 1;
-            }
-            self.kc_timer setTenthsTimer(self.archivetime - delay);
-
-            self thread spawnedKillcamCleanup();
-            self thread waitSkipKillcamButton();
-            self thread waitKillcamTime();
-            self waittill("end_killcam");
-
-            self removeKillcamElements();
-
-            self.spectatorclient = -1;
-            self.archivetime = 0;
-            self.killcam = undefined;
-        }
-        break;
-
-        case "dm":
+    if(gametype == "bel")
+    {
+        if (option == "axis to axis")
+            wait 2;
+        else if (option == "allies to axis")
         {
-            self endon("spawned");
+            self.pers["team"] = ("axis");
+            self.sessionteam = ("axis");
+            wait 2;
+        }
+    }
 
-        //	previousorigin = self.origin;
-        //	previousangles = self.angles;
+    self.sessionstate = "spectator";
+    self.spectatorclient = attackerNum;
+    self.archivetime = delay + 7;
 
-            // killcam
-            if(attackerNum < 0)
-                return;
+    // wait till the next server frame to allow code a chance to update archivetime if it needs trimming
+    wait 0.05;
 
-            self.sessionstate = "spectator";
-            self.spectatorclient = attackerNum;
-            self.archivetime = delay + 7;
+    if(self.archivetime <= delay)
+    {
+        self.spectatorclient = -1;
+        self.archivetime = 0;
+        if(gametype == "dm" || gametype == "tdm")
+        {
+            self.sessionstate = "dead";
 
-            // wait till the next server frame to allow code a chance to update archivetime if it needs trimming
-            wait 0.05;
-
-            if(self.archivetime <= delay)
+            if(gametype == "dm")
             {
-                self.spectatorclient = -1;
-                self.archivetime = 0;
-                self.sessionstate = "dead";
-            
                 self thread maps\mp\gametypes\dm::respawn();
-                return;
             }
-
-            if(!isdefined(self.kc_topbar))
+            else if(gametype == "tdm")
             {
-                self.kc_topbar = newClientHudElem(self);
-                self.kc_topbar.archived = false;
-                self.kc_topbar.x = 0;
-                self.kc_topbar.y = 0;
-                self.kc_topbar.alpha = 0.5;
-                self.kc_topbar setShader("black", 640, 112);
-            }
-
-            if(!isdefined(self.kc_bottombar))
-            {
-                self.kc_bottombar = newClientHudElem(self);
-                self.kc_bottombar.archived = false;
-                self.kc_bottombar.x = 0;
-                self.kc_bottombar.y = 368;
-                self.kc_bottombar.alpha = 0.5;
-                self.kc_bottombar setShader("black", 640, 112);
-            }
-
-            if(!isdefined(self.kc_title))
-            {
-                self.kc_title = newClientHudElem(self);
-                self.kc_title.archived = false;
-                self.kc_title.x = 320;
-                self.kc_title.y = 40;
-                self.kc_title.alignX = "center";
-                self.kc_title.alignY = "middle";
-                self.kc_title.sort = 1; // force to draw after the bars
-                self.kc_title.fontScale = 3.5;
-            }
-            self.kc_title setText(&"MPSCRIPT_KILLCAM");
-
-            if(!isdefined(self.kc_skiptext))
-            {
-                self.kc_skiptext = newClientHudElem(self);
-                self.kc_skiptext.archived = false;
-                self.kc_skiptext.x = 320;
-                self.kc_skiptext.y = 70;
-                self.kc_skiptext.alignX = "center";
-                self.kc_skiptext.alignY = "middle";
-                self.kc_skiptext.sort = 1; // force to draw after the bars
-            }
-            self.kc_skiptext setText(&"MPSCRIPT_PRESS_ACTIVATE_TO_RESPAWN");
-
-            if(!isdefined(self.kc_timer))
-            {
-                self.kc_timer = newClientHudElem(self);
-                self.kc_timer.archived = false;
-                self.kc_timer.x = 320;
-                self.kc_timer.y = 428;
-                self.kc_timer.alignX = "center";
-                self.kc_timer.alignY = "middle";
-                self.kc_timer.fontScale = 3.5;
-                self.kc_timer.sort = 1;
-            }
-            self.kc_timer setTenthsTimer(self.archivetime - delay);
-
-            self thread spawnedKillcamCleanup();
-            self thread waitSkipKillcamButton();
-            self thread waitKillcamTime();
-            self waittill("end_killcam");
-
-            self removeKillcamElements();
-
-            self.spectatorclient = -1;
-            self.archivetime = 0;
-            self.sessionstate = "dead";
-            
-            //self thread spawnSpectator(previousorigin + (0, 0, 60), previousangles);
-            self thread maps\mp\gametypes\dm::respawn();
-        }
-        break;
-
-        case "tdm":
-        {
-            self endon("spawned");
-
-        //	previousorigin = self.origin;
-        //	previousangles = self.angles;
-            
-            // killcam
-            if(attackerNum < 0)
-                return;
-
-            self.sessionstate = "spectator";
-            self.spectatorclient = attackerNum;
-            self.archivetime = delay + 7;
-
-            // wait till the next server frame to allow code a chance to update archivetime if it needs trimming
-            wait 0.05;
-
-            if(self.archivetime <= delay)
-            {
-                self.spectatorclient = -1;
-                self.archivetime = 0;
-                self.sessionstate = "dead";
-            
                 self thread maps\mp\gametypes\tdm::respawn();
-                return;
             }
-
-            if(!isdefined(self.kc_topbar))
-            {
-                self.kc_topbar = newClientHudElem(self);
-                self.kc_topbar.archived = false;
-                self.kc_topbar.x = 0;
-                self.kc_topbar.y = 0;
-                self.kc_topbar.alpha = 0.5;
-                self.kc_topbar setShader("black", 640, 112);
-            }
-
-            if(!isdefined(self.kc_bottombar))
-            {
-                self.kc_bottombar = newClientHudElem(self);
-                self.kc_bottombar.archived = false;
-                self.kc_bottombar.x = 0;
-                self.kc_bottombar.y = 368;
-                self.kc_bottombar.alpha = 0.5;
-                self.kc_bottombar setShader("black", 640, 112);
-            }
-
-            if(!isdefined(self.kc_title))
-            {
-                self.kc_title = newClientHudElem(self);
-                self.kc_title.archived = false;
-                self.kc_title.x = 320;
-                self.kc_title.y = 40;
-                self.kc_title.alignX = "center";
-                self.kc_title.alignY = "middle";
-                self.kc_title.sort = 1; // force to draw after the bars
-                self.kc_title.fontScale = 3.5;
-            }
-            self.kc_title setText(&"MPSCRIPT_KILLCAM");
-
-            if(!isdefined(self.kc_skiptext))
-            {
-                self.kc_skiptext = newClientHudElem(self);
-                self.kc_skiptext.archived = false;
-                self.kc_skiptext.x = 320;
-                self.kc_skiptext.y = 70;
-                self.kc_skiptext.alignX = "center";
-                self.kc_skiptext.alignY = "middle";
-                self.kc_skiptext.sort = 1; // force to draw after the bars
-            }
-            self.kc_skiptext setText(&"MPSCRIPT_PRESS_ACTIVATE_TO_RESPAWN");
-
-            if(!isdefined(self.kc_timer))
-            {
-                self.kc_timer = newClientHudElem(self);
-                self.kc_timer.archived = false;
-                self.kc_timer.x = 320;
-                self.kc_timer.y = 428;
-                self.kc_timer.alignX = "center";
-                self.kc_timer.alignY = "middle";
-                self.kc_timer.fontScale = 3.5;
-                self.kc_timer.sort = 1;
-            }
-            self.kc_timer setTenthsTimer(self.archivetime - delay);
-
-            self thread spawnedKillcamCleanup();
-            self thread waitSkipKillcamButton();
-            self thread waitKillcamTime();
-            self waittill("end_killcam");
-
-            self removeKillcamElements();
-
-            self.spectatorclient = -1;
-            self.archivetime = 0;
-            self.sessionstate = "dead";
-
-            //self thread spawnSpectator(previousorigin + (0, 0, 60), previousangles);
-            self thread maps\mp\gametypes\tdm::respawn();
         }
-        break;
-
-        case "bel":
+        else if(gametype == "bel")
         {
-            self endon("spawned");
-
-            if(attackerNum < 0)
-                return;
-
-            if (option == "axis to axis")
-                wait 2;
-            else if (option == "allies to axis")
-            {
-                self.pers["team"] = ("axis");
-                self.sessionteam = ("axis");
-                wait 2;
-            }
-
-            self.sessionstate = "spectator";
-            self.spectatorclient = attackerNum;
-            self.archivetime = delay + 7;
-            
-            wait 0.05;
-
-            if(self.archivetime <= delay)
-            {
-                self.spectatorclient = -1;
-                self.archivetime = 0;
-
-                if (option == "axis to axis")
-                {
-                    if (!isalive (self))
-                        self thread maps\mp\gametypes\bel::respawn("auto",0);
-                }
-                else if (option == "allies to axis")
-                    self maps\mp\gametypes\bel::move_to_axis(0,"nodelay on respawn");
-            
-                return;
-            }
-
-            if (!isdefined(self.kc_topbar))
-            {
-                self.kc_topbar = newClientHudElem(self);
-                self.kc_topbar.archived = false;
-                self.kc_topbar.x = 0;
-                self.kc_topbar.y = 0;
-                self.kc_topbar.alpha = 0.5;
-                self.kc_topbar setShader("black", 640, 112);
-            }
-            
-            if (!isdefined(self.kc_bottombar))
-            {
-                self.kc_bottombar = newClientHudElem(self);
-                self.kc_bottombar.archived = false;
-                self.kc_bottombar.x = 0;
-                self.kc_bottombar.y = 368;
-                self.kc_bottombar.alpha = 0.5;
-                self.kc_bottombar setShader("black", 640, 112);
-            }
-            
-            if (!isdefined(self.kc_title))
-            {
-                self.kc_title = newClientHudElem(self);
-                self.kc_title.archived = false;
-                self.kc_title.x = 320;
-                self.kc_title.y = 40;
-                self.kc_title.alignX = "center";
-                self.kc_title.alignY = "middle";
-                self.kc_title.sort = 1;
-                self.kc_title.fontScale = 3.5;
-            }
-            self.kc_title setText(&"MPSCRIPT_KILLCAM");
-            
-            if (!isdefined(self.kc_skiptext))
-            {
-                self.kc_skiptext = newClientHudElem(self);
-                self.kc_skiptext.archived = false;
-                self.kc_skiptext.x = 320;
-                self.kc_skiptext.y = 70;
-                self.kc_skiptext.alignX = "center";
-                self.kc_skiptext.alignY = "middle";
-                self.kc_skiptext.sort = 1;
-            }
-            self.kc_skiptext setText(&"MPSCRIPT_PRESS_ACTIVATE_TO_RESPAWN");
-
-            if (!isdefined(self.kc_timer))
-            {
-                self.kc_timer = newClientHudElem(self);
-                self.kc_timer.archived = false;
-                self.kc_timer.x = 320;
-                self.kc_timer.y = 428;
-                self.kc_timer.alignX = "center";
-                self.kc_timer.alignY = "middle";
-                self.kc_timer.fontScale = 3.5;
-                self.kc_timer.sort = 1;
-            }
-            self.kc_timer setTenthsTimer(self.archivetime - delay);
-            
-            self thread spawnedKillcamCleanup();
-            self thread waitSkipKillcamButton();
-            self thread waitKillcamTime();
-            self waittill("end_killcam");
-            
-            self removeKillcamElements();
-
-            self.spectatorclient = -1;
-            self.archivetime = 0;
-
             if (option == "axis to axis")
             {
                 if (!isalive (self))
@@ -2823,109 +2465,117 @@ killcam(attackerNum, delay, option)
             else if (option == "allies to axis")
                 self maps\mp\gametypes\bel::move_to_axis(0,"nodelay on respawn");
         }
-        break;
 
-        case "re":
+        return;
+    }
+
+    if(gametype == "sd" || gametype == "re")
+    {
+        self.killcam = true;
+    }
+
+    if(!isdefined(self.kc_topbar))
+    {
+        self.kc_topbar = newClientHudElem(self);
+        self.kc_topbar.archived = false;
+        self.kc_topbar.x = 0;
+        self.kc_topbar.y = 0;
+        self.kc_topbar.alpha = 0.5;
+        self.kc_topbar setShader("black", 640, 112);
+    }
+
+    if(!isdefined(self.kc_bottombar))
+    {
+        self.kc_bottombar = newClientHudElem(self);
+        self.kc_bottombar.archived = false;
+        self.kc_bottombar.x = 0;
+        self.kc_bottombar.y = 368;
+        self.kc_bottombar.alpha = 0.5;
+        self.kc_bottombar setShader("black", 640, 112);
+    }
+
+    if(!isdefined(self.kc_title))
+    {
+        self.kc_title = newClientHudElem(self);
+        self.kc_title.archived = false;
+        self.kc_title.x = 320;
+        self.kc_title.y = 40;
+        self.kc_title.alignX = "center";
+        self.kc_title.alignY = "middle";
+        self.kc_title.sort = 1; // force to draw after the bars
+        self.kc_title.fontScale = 3.5;
+    }
+    self.kc_title setText(&"MPSCRIPT_KILLCAM");
+
+    if(!isdefined(self.kc_skiptext))
+    {
+        self.kc_skiptext = newClientHudElem(self);
+        self.kc_skiptext.archived = false;
+        self.kc_skiptext.x = 320;
+        self.kc_skiptext.y = 70;
+        self.kc_skiptext.alignX = "center";
+        self.kc_skiptext.alignY = "middle";
+        self.kc_skiptext.sort = 1; // force to draw after the bars
+    }
+    if(gametype == "dm" || gametype == "tdm" || gametype == "bel")
+    {
+        self.kc_skiptext setText(&"MPSCRIPT_PRESS_ACTIVATE_TO_RESPAWN");
+    }
+    else
+    {
+        self.kc_skiptext setText(&"MPSCRIPT_PRESS_ACTIVATE_TO_SKIP");
+    }
+
+    if(!isdefined(self.kc_timer))
+    {
+        self.kc_timer = newClientHudElem(self);
+        self.kc_timer.archived = false;
+        self.kc_timer.x = 320;
+        self.kc_timer.y = 428;
+        self.kc_timer.alignX = "center";
+        self.kc_timer.alignY = "middle";
+        self.kc_timer.fontScale = 3.5;
+        self.kc_timer.sort = 1;
+    }
+    self.kc_timer setTenthsTimer(self.archivetime - delay);
+
+    self thread spawnedKillcamCleanup();
+    self thread waitSkipKillcamButton();
+    self thread waitKillcamTime();
+    self waittill("end_killcam");
+
+    self removeKillcamElements();
+
+    self.spectatorclient = -1;
+    self.archivetime = 0;
+    if(gametype == "sd" || gametype == "re")
+    {
+        self.killcam = undefined;
+    }
+    if(gametype == "dm" || gametype == "tdm")
+    {
+        self.sessionstate = "dead";
+    }
+
+    if(gametype == "dm")
+    {
+        //self thread spawnSpectator(previousorigin + (0, 0, 60), previousangles);
+        self thread maps\mp\gametypes\dm::respawn();
+    }
+    else if(gametype == "tdm")
+    {
+        //self thread spawnSpectator(previousorigin + (0, 0, 60), previousangles);
+        self thread maps\mp\gametypes\tdm::respawn();
+    }
+    else if(gametype == "bel")
+    {
+        if (option == "axis to axis")
         {
-            self endon("spawned");
-
-            // killcam
-            if(attackerNum < 0)
-                return;
-
-            self.sessionstate = "spectator";
-            self.spectatorclient = attackerNum;
-            self.archivetime = delay + 7;
-
-            // wait till the next server frame to allow code a chance to update archivetime if it needs trimming
-            wait 0.05;
-
-            if(self.archivetime <= delay)
-            {
-                self.spectatorclient = -1;
-                self.archivetime = 0;
-            
-                return;
-            }
-
-            self.killcam = true;
-            
-            if (!isdefined(self.kc_topbar))
-            {
-                self.kc_topbar = newClientHudElem(self);
-                self.kc_topbar.archived = false;
-                self.kc_topbar.x = 0;
-                self.kc_topbar.y = 0;
-                self.kc_topbar.alpha = 0.5;
-                self.kc_topbar setShader("black", 640, 112);
-            }
-            
-            if (!isdefined(self.kc_bottombar))
-            {
-                self.kc_bottombar = newClientHudElem(self);
-                self.kc_bottombar.archived = false;
-                self.kc_bottombar.x = 0;
-                self.kc_bottombar.y = 368;
-                self.kc_bottombar.alpha = 0.5;
-                self.kc_bottombar setShader("black", 640, 112);
-            }
-            
-            if (!isdefined(self.kc_title))
-            {
-                self.kc_title = newClientHudElem(self);
-                self.kc_title.archived = false;
-                self.kc_title.x = 320;
-                self.kc_title.y = 40;
-                self.kc_title.alignX = "center";
-                self.kc_title.alignY = "middle";
-                self.kc_title.sort = 1; // force to draw after the bars
-                self.kc_title.fontScale = 3.5;
-            }
-            self.kc_title setText(&"MPSCRIPT_KILLCAM");
-            
-            if (!isdefined(self.kc_skiptext))
-            {
-                self.kc_skiptext = newClientHudElem(self);
-                self.kc_skiptext.archived = false;
-                self.kc_skiptext.x = 320;
-                self.kc_skiptext.y = 70;
-                self.kc_skiptext.alignX = "center";
-                self.kc_skiptext.alignY = "middle";
-                self.kc_skiptext.sort = 1; // force to draw after the bars
-            }
-            self.kc_skiptext setText(&"MPSCRIPT_PRESS_ACTIVATE_TO_SKIP");
-
-            if (!isdefined(self.kc_timer))
-            {
-                self.kc_timer = newClientHudElem(self);
-                self.kc_timer.archived = false;
-                self.kc_timer.x = 320;
-                self.kc_timer.y = 428;
-                self.kc_timer.alignX = "center";
-                self.kc_timer.alignY = "middle";
-                self.kc_timer.fontScale = 3.5;
-                self.kc_timer.sort = 1;
-            }
-            self.kc_timer setTenthsTimer(self.archivetime - delay);
-            
-            self thread spawnedKillcamCleanup();
-            self thread waitSkipKillcamButton();
-            self thread waitKillcamTime();
-            self waittill("end_killcam");
-            
-            self removeKillcamElements();
-
-            self.spectatorclient = -1;
-            self.archivetime = 0;
-            self.killcam = undefined;
+            if (!isalive (self))
+                self thread maps\mp\gametypes\bel::respawn("auto",0);
         }
-        break;
-
-        default:
-        {
-            printLn("##### centralizer: killcam: default");
-        }
-        break;
+        else if (option == "allies to axis")
+            self maps\mp\gametypes\bel::move_to_axis(0,"nodelay on respawn");
     }
 }
 
