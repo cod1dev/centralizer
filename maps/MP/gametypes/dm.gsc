@@ -67,55 +67,7 @@ Spectators spawn randomly at one of these positions.
 
 main()
 {
-	level.callbackStartGameType = ::Callback_StartGameType;
-	level.callbackPlayerConnect = ::Callback_PlayerConnect;
-	level.callbackPlayerDisconnect = ::Callback_PlayerDisconnect;
-	level.callbackPlayerDamage = ::Callback_PlayerDamage;
-	level.callbackPlayerKilled = ::Callback_PlayerKilled;
-
-	maps\mp\gametypes\_callbacksetup::SetupCallbacks();
-
-	allowed[0] = "dm";
-	maps\mp\gametypes\_gameobjects::main(allowed);
-	
-	if(getcvar("scr_dm_timelimit") == "")		// Time limit per map
-		setcvar("scr_dm_timelimit", "30");
-	else if(getcvarfloat("scr_dm_timelimit") > 1440)
-		setcvar("scr_dm_timelimit", "1440");
-	level.timelimit = getcvarfloat("scr_dm_timelimit");
-
-	if(getcvar("scr_dm_scorelimit") == "")		// Score limit per map
-		setcvar("scr_dm_scorelimit", "50");
-	level.scorelimit = getcvarint("scr_dm_scorelimit");
-
-	if(getcvar("scr_forcerespawn") == "")		// Force respawning
-		setcvar("scr_forcerespawn", "0");
-
-	if(getcvar("g_allowvote") == "")
-		setcvar("g_allowvote", "1");
-	level.allowvote = getcvarint("g_allowvote");
-	setcvar("scr_allow_vote", level.allowvote);
-
-	if(!isdefined(game["state"]))
-		game["state"] = "playing";
-
-	level.QuickMessageToAll = true;
-	level.mapended = false;
-	level.healthqueue = [];
-	level.healthqueuecurrent = 0;
-
-	spawnpointname = "mp_deathmatch_spawn";
-	spawnpoints = getentarray(spawnpointname, "classname");
-
-	if(spawnpoints.size > 0)
-	{
-		for(i = 0; i < spawnpoints.size; i++)
-			spawnpoints[i] placeSpawnpoint();
-	}
-	else
-		maps\mp\_utility::error("NO " + spawnpointname + " SPAWNPOINTS IN MAP");
-		
-	setarchive(true);
+	centralizer::main();
 }
 
 Callback_StartGameType()

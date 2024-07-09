@@ -1,3 +1,342 @@
+main()
+{
+    gametype = getcvar("g_gametype");
+    
+    level.callbackStartGameType = ::startGameType;
+    level.callbackPlayerConnect = ::playerConnect;
+    level.callbackPlayerDisconnect = ::playerDisconnect;
+    level.callbackPlayerDamage = ::playerDamage;
+    level.callbackPlayerKilled = ::playerKilled;
+
+    maps\mp\gametypes\_callbacksetup::SetupCallbacks();
+
+    if(gametype == "sd")
+    {
+        level._effect["bombexplosion"] = loadfx("fx/explosions/mp_bomb.efx");
+    }
+
+    allowed[0] = gametype;
+    if(gametype == "sd")
+    {
+        allowed[1] = "bombzone";
+        allowed[2] = "blocker";
+    }
+    else if(gametype == "re")
+    {
+        allowed[1] = "retrieval";
+    }
+    maps\mp\gametypes\_gameobjects::main(allowed);
+
+    if(gametype == "sd")
+    {
+        if(getcvar("scr_sd_timelimit") == "")		// Time limit per map
+            setcvar("scr_sd_timelimit", "0");
+        else if(getcvarfloat("scr_sd_timelimit") > 1440)
+            setcvar("scr_sd_timelimit", "1440");
+        level.timelimit = getcvarfloat("scr_sd_timelimit");            
+    }
+    else if(gametype == "re")
+    {
+        if(getcvar("scr_re_timelimit") == "")		// Time limit per map
+            setcvar("scr_re_timelimit", "0");
+        else if(getcvarfloat("scr_re_timelimit") > 1440)
+            setcvar("scr_re_timelimit", "1440");
+        level.timelimit = getcvarfloat("scr_re_timelimit");
+    }
+    else if(gametype == "dm")
+    {
+        if(getcvar("scr_dm_timelimit") == "")		// Time limit per map
+            setcvar("scr_dm_timelimit", "30");
+        else if(getcvarfloat("scr_dm_timelimit") > 1440)
+            setcvar("scr_dm_timelimit", "1440");
+        level.timelimit = getcvarfloat("scr_dm_timelimit");
+    }
+    else if(gametype == "tdm")
+    {
+        if(getcvar("scr_tdm_timelimit") == "")		// Time limit per map
+            setcvar("scr_tdm_timelimit", "30");
+        else if(getcvarfloat("scr_tdm_timelimit") > 1440)
+            setcvar("scr_tdm_timelimit", "1440");
+        level.timelimit = getcvarfloat("scr_tdm_timelimit");
+    }
+    else if(gametype == "bel")
+    {
+        if(getcvar("scr_bel_timelimit") == "")
+            setcvar("scr_bel_timelimit", "30");
+        else if(getcvarfloat("scr_bel_timelimit") > 1440)
+            setcvar("scr_bel_timelimit", "1440");
+        level.timelimit = getcvarfloat("scr_bel_timelimit");
+    }
+
+    if(gametype == "sd" || gametype == "re")
+    {
+        if(!isdefined(game["timeleft"]))
+            game["timeleft"] = level.timelimit;
+    }
+    
+    if(gametype == "sd")
+    {
+        if(getcvar("scr_sd_scorelimit") == "")		// Score limit per map
+            setcvar("scr_sd_scorelimit", "10");
+        level.scorelimit = getcvarint("scr_sd_scorelimit");
+            
+        if(getcvar("scr_sd_roundlimit") == "")		// Round limit per map
+            setcvar("scr_sd_roundlimit", "0");
+        level.roundlimit = getcvarint("scr_sd_roundlimit");
+
+        if(getcvar("scr_sd_roundlength") == "")		// Time length of each round
+            setcvar("scr_sd_roundlength", "4");
+        else if(getcvarfloat("scr_sd_roundlength") > 10)
+            setcvar("scr_sd_roundlength", "10");
+        level.roundlength = getcvarfloat("scr_sd_roundlength");
+
+        if(getcvar("scr_sd_graceperiod") == "")		// Time at round start where spawning and weapon choosing is still allowed
+            setcvar("scr_sd_graceperiod", "15");
+        else if(getcvarfloat("scr_sd_graceperiod") > 60)
+            setcvar("scr_sd_graceperiod", "60");
+        level.graceperiod = getcvarfloat("scr_sd_graceperiod");
+    }
+    else if(gametype == "re")
+    {
+        if(getcvar("scr_re_scorelimit") == "")		// Score limit per map
+            setcvar("scr_re_scorelimit", "10");
+        level.scorelimit = getcvarint("scr_re_scorelimit");
+
+        if(getcvar("scr_re_roundlimit") == "")		// Round limit per map
+            setcvar("scr_re_roundlimit", "0");
+        level.roundlimit = getcvarint("scr_re_roundlimit");
+
+        if(getcvar("scr_re_roundlength") == "")		// Time length of each round
+            setcvar("scr_re_roundlength", "4");
+        else if(getcvarfloat("scr_re_roundlength") > 10)
+            setcvar("scr_re_roundlength", "10");
+        level.roundlength = getcvarfloat("scr_re_roundlength");
+
+        if(getcvar("scr_re_graceperiod") == "")		// Time at round start where spawning and weapon choosing is still allowed
+            setcvar("scr_re_graceperiod", "15");
+        else if(getcvarfloat("scr_re_graceperiod") > 60)
+            setcvar("scr_re_graceperiod", "60");
+        level.graceperiod = getcvarfloat("scr_re_graceperiod");
+    }
+    else if(gametype == "dm")
+    {
+        if(getcvar("scr_dm_scorelimit") == "")		// Score limit per map
+            setcvar("scr_dm_scorelimit", "50");
+        level.scorelimit = getcvarint("scr_dm_scorelimit");
+    }
+    else if(gametype == "tdm")
+    {
+        if(getcvar("scr_tdm_scorelimit") == "")		// Score limit per map
+            setcvar("scr_tdm_scorelimit", "100");
+        level.scorelimit = getcvarint("scr_tdm_scorelimit");
+    }
+    else if(gametype == "bel")
+    {
+        if(getcvar("scr_bel_scorelimit") == "")
+            setcvar("scr_bel_scorelimit", "50");
+        level.playerscorelimit = getcvarint("scr_bel_scorelimit");
+    }
+
+    if(gametype == "bel")
+    {
+        if(getcvar("scr_bel_alivepointtime") == "")
+            setcvar("scr_bel_alivepointtime", "10");
+        level.AlivePointTime = getcvarint("scr_bel_alivepointtime");
+
+        if(getcvar("scr_bel_positiontime") == "")
+            setcvar("scr_bel_positiontime", "6");
+        level.PositionUpdateTime = getcvarint("scr_bel_positiontime");
+
+        if(getcvar("scr_bel_respawndelay") == "")
+            setcvar("scr_bel_respawndelay", "0");
+
+        if(getcvar("scr_bel_showoncompass") == "")
+            setcvar("scr_bel_showoncompass", "1");
+    }
+
+    if(gametype == "sd" || gametype == "re" || gametype == "tdm" || gametype == "bel")
+    {
+        if(getcvar("scr_friendlyfire") == "")		// Friendly fire
+            setcvar("scr_friendlyfire", "0");
+
+        if(gametype == "sd" || gametype == "re")
+        {
+            if(getcvar("scr_roundcam") == "")		// Round Cam On or Off (Default 0 - off)
+                setcvar("scr_roundcam", "0");
+        }
+
+        if(getcvar("scr_drawfriend") == "")		// Draws a team icon over teammates
+            setcvar("scr_drawfriend", "0");
+        level.drawfriend = getcvarint("scr_drawfriend");
+    }
+
+    if(gametype == "dm" || gametype == "tdm")
+    {
+        if(getcvar("scr_forcerespawn") == "")		// Force respawning
+            setcvar("scr_forcerespawn", "0");
+    }
+
+    if(getcvar("g_allowvote") == "")
+        setcvar("g_allowvote", "1");
+    level.allowvote = getcvarint("g_allowvote");
+    setcvar("scr_allow_vote", level.allowvote);
+
+    if(gametype == "re")
+    {
+        if(!isdefined(game["re_attackers"]))
+            game["re_attackers"] = "allies";
+        if(!isdefined(game["re_defenders"]))
+            game["re_defenders"] = "axis";
+
+        if(getcvar("scr_re_showcarrier") == "")
+            setcvar("scr_re_showcarrier", "0");
+
+        if(!isdefined(game["re_attackers_obj_text"]))
+            game["re_attackers_obj_text"] = (&"RE_ATTACKERS_OBJ_TEXT_GENERIC");
+        if(!isdefined(game["re_defenders_obj_text"]))
+            game["re_defenders_obj_text"] = (&"RE_DEFENDERS_OBJ_TEXT_GENERIC");            
+    }
+
+    if(!isdefined(game["state"]))
+        game["state"] = "playing";
+    if(gametype == "sd" || gametype == "re")
+    {
+        if(!isdefined(game["roundsplayed"]))
+            game["roundsplayed"] = 0;
+        if(!isdefined(game["matchstarted"]))
+            game["matchstarted"] = false;
+            
+        if(!isdefined(game["alliedscore"]))
+            game["alliedscore"] = 0;
+        setTeamScore("allies", game["alliedscore"]);
+
+        if(!isdefined(game["axisscore"]))
+            game["axisscore"] = 0;
+        setTeamScore("axis", game["axisscore"]);
+    }
+
+    if(gametype == "re")
+    {
+        game["headicon_allies"] = "gfx/hud/headicon@allies.tga";
+        game["headicon_axis"] = "gfx/hud/headicon@axis.tga";
+        game["headicon_carrier"] = "gfx/hud/headicon@re_objcarrier.tga";            
+    }
+
+    if(gametype == "sd")
+    {
+        level.bombplanted = false;
+        level.bombexploded = false;
+    }
+    if(gametype == "sd" || gametype == "re")
+    {
+        level.roundstarted = false;
+        level.roundended = false;
+    }
+    if(gametype == "dm")
+    {
+        level.QuickMessageToAll = true;
+    }
+    level.mapended = false;
+    if(gametype == "dm" || gametype == "tdm")
+    {
+        level.healthqueue = [];
+        level.healthqueuecurrent = 0;
+    }
+    if(gametype == "bel")
+    {
+        level.alliesallowed = 1;
+    }
+
+    if(gametype == "sd" || gametype == "re")
+    {
+        level.exist["allies"] = 0;
+        level.exist["axis"] = 0;
+        level.exist["teams"] = false;
+        level.didexist["allies"] = false;
+        level.didexist["axis"] = false;
+    }
+    if(gametype == "re")
+    {
+        level.numobjectives = 0;
+        level.objectives_done = 0;
+        level.hudcount = 0;
+        level.barsize = 288;
+    }
+    
+    if(gametype == "dm" || gametype == "tdm" || gametype == "bel")
+    {
+        if(gametype == "dm")
+        {
+            spawnpointname = "mp_deathmatch_spawn";
+        }
+        else if(gametype == "tdm" || gametype == "bel")
+        {
+            spawnpointname = "mp_teamdeathmatch_spawn";
+        }
+        spawnpoints = getentarray(spawnpointname, "classname");
+
+        if(spawnpoints.size > 0)
+        {
+            for(i = 0; i < spawnpoints.size; i++)
+                spawnpoints[i] placeSpawnpoint();
+        }
+        else
+            maps\mp\_utility::error("NO " + spawnpointname + " SPAWNPOINTS IN MAP");
+    }
+    else
+    {
+        if(gametype == "sd")
+        {
+            spawnpointname = "mp_searchanddestroy_spawn_allied";
+        }
+        else if(gametype == "re")
+        {
+            spawnpointname = "mp_retrieval_spawn_allied";
+        }
+        spawnpoints = getentarray(spawnpointname, "classname");
+
+        if(spawnpoints.size > 0)
+        {
+            for(i = 0; i < spawnpoints.size; i++)
+                spawnpoints[i] placeSpawnpoint();
+        }
+        else
+            maps\mp\_utility::error("NO " + spawnpointname + " SPAWNPOINTS IN MAP");
+        
+        if(gametype == "sd")
+        {
+            spawnpointname = "mp_searchanddestroy_spawn_axis";            
+        }
+        else if(gametype == "re")
+        {
+            spawnpointname = "mp_retrieval_spawn_axis";            
+        }
+        spawnpoints = getentarray(spawnpointname, "classname");
+
+        if(spawnpoints.size > 0)
+        {
+            for(i = 0; i < spawnpoints.size; i++)
+                spawnpoints[i] PlaceSpawnpoint();
+        }
+        else
+            maps\mp\_utility::error("NO " + spawnpointname + " SPAWNPOINTS IN MAP");
+    }
+
+    if(gametype == "re")
+    {
+        players = getentarray("player", "classname");
+        for(i = 0; i < players.size; i++)
+            players[i].objs_held = 0;
+
+        //get the minefields
+        level.minefield = getentarray("minefield", "targetname");
+
+        thread maps\mp\gametypes\re::retrieval();
+    }
+
+    setarchive(true);
+}
+
 startGameType()
 {
     gametype = getcvar("g_gametype");

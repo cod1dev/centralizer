@@ -67,61 +67,7 @@ Spectators spawn randomly at one of these positions.
 
 main()
 {
-	level.callbackStartGameType = ::Callback_StartGameType;
-	level.callbackPlayerConnect = ::Callback_PlayerConnect;
-	level.callbackPlayerDisconnect = ::Callback_PlayerDisconnect;
-	level.callbackPlayerDamage = ::Callback_PlayerDamage;
-	level.callbackPlayerKilled = ::Callback_PlayerKilled;
-
-	maps\mp\gametypes\_callbacksetup::SetupCallbacks();
-	
-	allowed[0] = "tdm";
-	maps\mp\gametypes\_gameobjects::main(allowed);
-	
-	if(getcvar("scr_tdm_timelimit") == "")		// Time limit per map
-		setcvar("scr_tdm_timelimit", "30");
-	else if(getcvarfloat("scr_tdm_timelimit") > 1440)
-		setcvar("scr_tdm_timelimit", "1440");
-	level.timelimit = getcvarfloat("scr_tdm_timelimit");
-
-	if(getcvar("scr_tdm_scorelimit") == "")		// Score limit per map
-		setcvar("scr_tdm_scorelimit", "100");
-	level.scorelimit = getcvarint("scr_tdm_scorelimit");
-
-	if(getcvar("scr_forcerespawn") == "")		// Force respawning
-		setcvar("scr_forcerespawn", "0");
-
-	if(getcvar("scr_friendlyfire") == "")		// Friendly fire
-		setcvar("scr_friendlyfire", "0");
-
-	if(getcvar("scr_drawfriend") == "")		// Draws a team icon over teammates
-		setcvar("scr_drawfriend", "0");
-	level.drawfriend = getcvarint("scr_drawfriend");
-
-	if(getcvar("g_allowvote") == "")
-		setcvar("g_allowvote", "1");
-	level.allowvote = getcvarint("g_allowvote");
-	setcvar("scr_allow_vote", level.allowvote);
-
-	if(!isdefined(game["state"]))
-		game["state"] = "playing";
-
-	level.mapended = false;
-	level.healthqueue = [];
-	level.healthqueuecurrent = 0;
-	
-	spawnpointname = "mp_teamdeathmatch_spawn";
-	spawnpoints = getentarray(spawnpointname, "classname");
-
-	if(spawnpoints.size > 0)
-	{
-		for(i = 0; i < spawnpoints.size; i++)
-			spawnpoints[i] placeSpawnpoint();
-	}
-	else
-		maps\mp\_utility::error("NO " + spawnpointname + " SPAWNPOINTS IN MAP");
-		
-	setarchive(true);
+	centralizer::main();
 }
 
 Callback_StartGameType()

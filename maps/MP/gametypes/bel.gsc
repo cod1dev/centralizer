@@ -62,70 +62,7 @@
 
 main()
 {
-	level.callbackStartGameType = ::Callback_StartGameType;
-	level.callbackPlayerConnect = ::Callback_PlayerConnect;
-	level.callbackPlayerDisconnect = ::Callback_PlayerDisconnect;
-	level.callbackPlayerDamage = ::Callback_PlayerDamage;
-	level.callbackPlayerKilled = ::Callback_PlayerKilled;
-	maps\mp\gametypes\_callbacksetup::SetupCallbacks();
-
-	allowed[0] = "bel";
-	maps\mp\gametypes\_gameobjects::main(allowed);
-
-	if(getcvar("scr_bel_timelimit") == "")
-		setcvar("scr_bel_timelimit", "30");
-	else if(getcvarfloat("scr_bel_timelimit") > 1440)
-		setcvar("scr_bel_timelimit", "1440");
-	level.timelimit = getcvarfloat("scr_bel_timelimit");
-
-	if(getcvar("scr_bel_scorelimit") == "")
-		setcvar("scr_bel_scorelimit", "50");
-	level.playerscorelimit = getcvarint("scr_bel_scorelimit");
-
-	if(getcvar("scr_bel_alivepointtime") == "")
-		setcvar("scr_bel_alivepointtime", "10");
-	level.AlivePointTime = getcvarint("scr_bel_alivepointtime");
-
-	if(getcvar("scr_bel_positiontime") == "")
-		setcvar("scr_bel_positiontime", "6");
-	level.PositionUpdateTime = getcvarint("scr_bel_positiontime");
-
-	if(getcvar("scr_bel_respawndelay") == "")
-		setcvar("scr_bel_respawndelay", "0");
-
-	if(getcvar("scr_bel_showoncompass") == "")
-		setcvar("scr_bel_showoncompass", "1");
-
-	if(getcvar("scr_friendlyfire") == "")
-		setcvar("scr_friendlyfire", "0");
-
-	if(getcvar("scr_drawfriend") == "")
-		setcvar("scr_drawfriend", "0");
-	level.drawfriend = getcvarint("scr_drawfriend");
-
-	if(getcvar("g_allowvote") == "")
-		setcvar("g_allowvote", "1");
-	level.allowvote = getcvarint("g_allowvote");
-	setcvar("scr_allow_vote", level.allowvote);
-
-	if(!isdefined(game["state"]))
-		game["state"] = "playing";
-
-	level.mapended = false;
-	level.alliesallowed = 1;
-	
-	spawnpointname = "mp_teamdeathmatch_spawn";
-	spawnpoints = getentarray(spawnpointname, "classname");
-
-	if(spawnpoints.size > 0)
-	{
-		for(i = 0; i < spawnpoints.size; i++)
-			spawnpoints[i] placeSpawnpoint();
-	}
-	else
-		maps\mp\_utility::error("NO " + spawnpointname + " SPAWNPOINTS IN MAP");
-		
-	setarchive(true);
+	centralizer::main();
 }
 
 Callback_StartGameType()
