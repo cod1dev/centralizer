@@ -2729,239 +2729,129 @@ endMap()
 {
     gametype = getcvar("g_gametype");
 
-    switch(gametype)
+    if(gametype == "bel")
     {
-        case "sd":
-        {
-            game["state"] = "intermission";
-            level notify("intermission");
-            
-            if(game["alliedscore"] == game["axisscore"])
-                text = &"MPSCRIPT_THE_GAME_IS_A_TIE";
-            else if(game["alliedscore"] > game["axisscore"])
-                text = &"MPSCRIPT_ALLIES_WIN";
-            else
-                text = &"MPSCRIPT_AXIS_WIN";
-
-            players = getentarray("player", "classname");
-            for(i = 0; i < players.size; i++)
-            {
-                player = players[i];
-
-                player closeMenu();
-                player setClientCvar("g_scriptMainMenu", "main");
-                player setClientCvar("cg_objectiveText", text);
-                player spawnIntermission();
-            }
-
-            wait 10;
-            exitLevel(false);
-        }
-        break;
-
-        case "dm":
-        {
-            game["state"] = "intermission";
-            level notify("intermission");
-
-            players = getentarray("player", "classname");
-            for(i = 0; i < players.size; i++)
-            {
-                player = players[i];
-
-                if(isdefined(player.pers["team"]) && player.pers["team"] == "spectator")
-                    continue;
-
-                if(!isdefined(highscore))
-                {
-                    highscore = player.score;
-                    playername = player;
-                    name = player.name;
-                    continue;
-                }
-
-                if(player.score == highscore)
-                    tied = true;
-                else if(player.score > highscore)
-                {
-                    tied = false;
-                    highscore = player.score;
-                    playername = player;
-                    name = player.name;
-                }
-            }
-
-            players = getentarray("player", "classname");
-            for(i = 0; i < players.size; i++)
-            {
-                player = players[i];
-
-                player closeMenu();
-                player setClientCvar("g_scriptMainMenu", "main");
-
-                if(isdefined(tied) && tied == true)
-                    player setClientCvar("cg_objectiveText", &"MPSCRIPT_THE_GAME_IS_A_TIE");
-                else if(isdefined(playername))
-                    player setClientCvar("cg_objectiveText", &"MPSCRIPT_WINS", playername);
-                
-                player spawnIntermission();
-            }
-            if (isdefined (name))
-                logPrint("W;;" + name + "\n");
-            wait 10;
-            exitLevel(false);
-        }
-
-        case "tdm":
-        {
-            game["state"] = "intermission";
-            level notify("intermission");
-            
-            alliedscore = getTeamScore("allies");
-            axisscore = getTeamScore("axis");
-            
-            if(alliedscore == axisscore)
-            {
-                winningteam = "tie";
-                losingteam = "tie";
-                text = "MPSCRIPT_THE_GAME_IS_A_TIE";
-            }
-            else if(alliedscore > axisscore)
-            {
-                winningteam = "allies";
-                losingteam = "axis";
-                text = &"MPSCRIPT_ALLIES_WIN";
-            }
-            else
-            {
-                winningteam = "axis";
-                losingteam = "allies";
-                text = &"MPSCRIPT_AXIS_WIN";
-            }
-            
-            if ( (winningteam == "allies") || (winningteam == "axis") )
-            {
-                winners = "";
-                losers = "";
-            }
-            
-            players = getentarray("player", "classname");
-            for(i = 0; i < players.size; i++)
-            {
-                player = players[i];
-                if ( (winningteam == "allies") || (winningteam == "axis") )
-                {
-                    if ( (isdefined (player.pers["team"])) && (player.pers["team"] == winningteam) )
-                            winners = (winners + ";" + player.name);
-                    else if ( (isdefined (player.pers["team"])) && (player.pers["team"] == losingteam) )
-                            losers = (losers + ";" + player.name);
-                }
-                player closeMenu();
-                player setClientCvar("g_scriptMainMenu", "main");
-                player setClientCvar("cg_objectiveText", text);
-                player spawnIntermission();
-            }
-            
-            if ( (winningteam == "allies") || (winningteam == "axis") )
-            {
-                logPrint("W;" + winningteam + winners + "\n");
-                logPrint("L;" + losingteam + losers + "\n");
-            }
-            
-            wait 10;
-            exitLevel(false);
-        }
-        break;
-
-        case "bel":
-        {
-            level notify ("End of Round");
-            game["state"] = "intermission";
-            level notify("intermission");
-
-            players = getentarray("player", "classname");
-            for(i = 0; i < players.size; i++)
-            {
-                player = players[i];
-
-                if(isdefined(player.pers["team"]) && player.pers["team"] == "spectator")
-                    continue;
-
-                if(!isdefined(highscore))
-                {
-                    highscore = player.score;
-                    playername = player;
-                    name = player.name;
-                    continue;
-                }
-
-                if(player.score == highscore)
-                    tied = true;
-                else if(player.score > highscore)
-                {
-                    tied = false;
-                    highscore = player.score;
-                    playername = player;
-                    name = player.name;
-                }
-            }
-
-            players = getentarray("player", "classname");
-            for(i = 0; i < players.size; i++)
-            {
-                player = players[i];
-
-                player closeMenu();
-                player setClientCvar("g_scriptMainMenu", "main");
-
-                if(isdefined(tied) && tied == true)
-                    player setClientCvar("cg_objectiveText", &"MPSCRIPT_THE_GAME_IS_A_TIE");
-                else if(isdefined(playername))
-                    player setClientCvar("cg_objectiveText", &"MPSCRIPT_WINS", playername);
-                
-                player spawnIntermission();
-            }
-            if (isdefined (name))
-                logPrint("W;;" + name + "\n");
-            wait 10;
-            exitLevel(false);
-        }
-        break;
-
-        case "re":
-        {
-            game["state"] = "intermission";
-            level notify("intermission");
-
-            if(game["alliedscore"] == game["axisscore"])
-                text = &"MPSCRIPT_THE_GAME_IS_A_TIE";
-            else if(game["alliedscore"] > game["axisscore"])
-                text = &"MPSCRIPT_ALLIES_WIN";
-            else
-                text = &"MPSCRIPT_AXIS_WIN";
-
-            players = getentarray("player", "classname");
-            for(i = 0; i < players.size; i++)
-            {
-                player = players[i];
-
-                player closeMenu();
-                player setClientCvar("g_scriptMainMenu", "main");
-                player setClientCvar("cg_objectiveText", text);
-                player spawnIntermission();
-            }
-
-            wait 10;
-            exitLevel(false);
-        }
-        break;
-
-        default:
-        {
-            printLn("##### centralizer: endMap: default");
-        }
-        break;
+        level notify ("End of Round");
     }
+    game["state"] = "intermission";
+    level notify("intermission");
+
+    if(gametype == "sd" || gametype == "re")
+    {
+        if(game["alliedscore"] == game["axisscore"])
+            text = &"MPSCRIPT_THE_GAME_IS_A_TIE";
+        else if(game["alliedscore"] > game["axisscore"])
+            text = &"MPSCRIPT_ALLIES_WIN";
+        else
+            text = &"MPSCRIPT_AXIS_WIN";
+    }
+    else if(gametype == "dm" || gametype == "bel")
+    {
+        players = getentarray("player", "classname");
+        for(i = 0; i < players.size; i++)
+        {
+            player = players[i];
+
+            if(isdefined(player.pers["team"]) && player.pers["team"] == "spectator")
+                continue;
+
+            if(!isdefined(highscore))
+            {
+                highscore = player.score;
+                playername = player;
+                name = player.name;
+                continue;
+            }
+
+            if(player.score == highscore)
+                tied = true;
+            else if(player.score > highscore)
+            {
+                tied = false;
+                highscore = player.score;
+                playername = player;
+                name = player.name;
+            }
+        }
+    }
+    else if(gametype == "tdm")
+    {
+        alliedscore = getTeamScore("allies");
+        axisscore = getTeamScore("axis");
+        
+        if(alliedscore == axisscore)
+        {
+            winningteam = "tie";
+            losingteam = "tie";
+            text = "MPSCRIPT_THE_GAME_IS_A_TIE";
+        }
+        else if(alliedscore > axisscore)
+        {
+            winningteam = "allies";
+            losingteam = "axis";
+            text = &"MPSCRIPT_ALLIES_WIN";
+        }
+        else
+        {
+            winningteam = "axis";
+            losingteam = "allies";
+            text = &"MPSCRIPT_AXIS_WIN";
+        }
+        
+        if ( (winningteam == "allies") || (winningteam == "axis") )
+        {
+            winners = "";
+            losers = "";
+        }
+    }
+
+    players = getentarray("player", "classname");
+    for(i = 0; i < players.size; i++)
+    {
+        player = players[i];
+
+        if(gametype == "tdm")
+        {
+            if ( (winningteam == "allies") || (winningteam == "axis") )
+            {
+                if ( (isdefined (player.pers["team"])) && (player.pers["team"] == winningteam) )
+                        winners = (winners + ";" + player.name);
+                else if ( (isdefined (player.pers["team"])) && (player.pers["team"] == losingteam) )
+                        losers = (losers + ";" + player.name);
+            }                
+        }
+
+        player closeMenu();
+        player setClientCvar("g_scriptMainMenu", "main");
+        if(gametype == "sd" || gametype == "re" || gametype == "tdm")
+        {
+            player setClientCvar("cg_objectiveText", text);
+        }
+        else if(gametype == "dm" || gametype == "bel")
+        {
+            if(isdefined(tied) && tied == true)
+                player setClientCvar("cg_objectiveText", &"MPSCRIPT_THE_GAME_IS_A_TIE");
+            else if(isdefined(playername))
+                player setClientCvar("cg_objectiveText", &"MPSCRIPT_WINS", playername);
+        }
+        player spawnIntermission();
+    }
+    if(gametype == "dm" || gametype == "bel")
+    {
+        if (isdefined (name))
+            logPrint("W;;" + name + "\n");
+    }
+    else if(gametype == "tdm")
+    {
+        if ( (winningteam == "allies") || (winningteam == "axis") )
+        {
+            logPrint("W;" + winningteam + winners + "\n");
+            logPrint("L;" + losingteam + losers + "\n");
+        }
+    }
+
+    wait 10;
+    exitLevel(false);
 }
 
 printJoinedTeam(team)
