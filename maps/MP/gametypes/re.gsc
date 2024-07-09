@@ -272,18 +272,7 @@ checkMatchStart()
 
 resetScores()
 {
-		players = getentarray("player", "classname");
-		for(i = 0; i < players.size; i++)
-		{
-			player = players[i];
-			player.pers["score"] = 0;
-			player.pers["deaths"] = 0;
-		}
-
-		game["alliedscore"] = 0;
-		setTeamScore("allies", game["alliedscore"]);
-		game["axisscore"] = 0;
-		setTeamScore("axis", game["axisscore"]);
+	centralizer::resetScores();
 }
 
 endRound(roundwinner, timeexpired)
@@ -317,34 +306,12 @@ checkTimeLimit()
 
 checkScoreLimit()
 {
-	if(level.scorelimit <= 0)
-		return;
-
-	if(game["alliedscore"] < level.scorelimit && game["axisscore"] < level.scorelimit)
-		return;
-
-	if(level.mapended)
-		return;
-	level.mapended = true;
-
-	iprintln(&"MPSCRIPT_SCORE_LIMIT_REACHED");
-	endMap();
+	centralizer::checkScoreLimit();
 }
 
 checkRoundLimit()
 {
-	if(level.roundlimit <= 0)
-		return;
-
-	if(game["roundsplayed"] < level.roundlimit)
-		return;
-
-	if(level.mapended)
-		return;
-	level.mapended = true;
-
-	iprintln(&"MPSCRIPT_ROUND_LIMIT_REACHED");
-	endMap();
+	centralizer::checkRoundLimit();
 }
 
 updateScriptCvars()
