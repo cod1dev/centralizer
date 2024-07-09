@@ -270,11 +270,6 @@ checkMatchStart()
 	}
 }
 
-resetScores()
-{
-	centralizer::resetScores();
-}
-
 endRound(roundwinner, timeexpired)
 {
 	centralizer::endRound(roundwinner, timeexpired);
