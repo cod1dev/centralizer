@@ -2616,13 +2616,7 @@ startGame()
     {
         if(level.timelimit > 0)
         {
-            level.clock = newHudElem();
-            level.clock.x = 320;
-            level.clock.y = 460;
-            level.clock.alignX = "center";
-            level.clock.alignY = "middle";
-            level.clock.font = "bigfixed";
-            level.clock setTimer(level.timelimit * 60);
+            createClock();
         }
     }
     
@@ -2637,13 +2631,7 @@ startRound()
 {
     thread maps\mp\gametypes\_teams::sayMoveIn();
 
-    level.clock = newHudElem();
-    level.clock.x = 320;
-    level.clock.y = 460;
-    level.clock.alignX = "center";
-    level.clock.alignY = "middle";
-    level.clock.font = "bigfixed";
-    level.clock setTimer(level.roundlength * 60);
+    createClock();
 
     if(game["matchstarted"])
     {
@@ -2703,6 +2691,24 @@ startRound()
 
         announcement(&"RE_TIMEEXPIRED");
         level thread endRound(game["re_defenders"], true);
+    }
+}
+
+createClock()
+{
+    level.clock = newHudElem();
+    level.clock.x = 320;
+    level.clock.y = 460;
+    level.clock.alignX = "center";
+    level.clock.alignY = "middle";
+    level.clock.font = "bigfixed";
+    if (level.gametype == "sd" || level.gametype == "re")
+    {
+        level.clock setTimer(level.roundlength * 60);
+    }
+    else
+    {
+        level.clock setTimer(level.timelimit * 60);
     }
 }
 
